@@ -2,7 +2,7 @@
 
 ## Render
 
-Create a Blueprint from `render.yaml`. Supply every `sync: false` value in the Render dashboard. The service intentionally launches with payments disabled so Dodo can review a complete public website without accepting money.
+Create a Blueprint from `render.yaml`. Supply every `sync: false` value in the Render dashboard. The service intentionally launches with payments disabled and does not require Dodo credentials, so Dodo can review a complete public website without accepting money. Add the four Dodo credential variables after merchant approval.
 
 ## Supabase
 
