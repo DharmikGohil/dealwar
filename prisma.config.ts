@@ -1,5 +1,15 @@
 import "dotenv/config";
+import { resolve } from "node:path";
 import { defineConfig, env } from "prisma/config";
+
+const datasourceUrl = new URL(env("DATABASE_URL"));
+if (datasourceUrl.hostname.endsWith(".pooler.supabase.com")) {
+  datasourceUrl.searchParams.set("sslmode", "verify-full");
+  datasourceUrl.searchParams.set(
+    "sslrootcert",
+    resolve("certs/supabase-root-2021-ca.pem"),
+  );
+}
 
 export default defineConfig({
   schema: "prisma/schema.prisma",
@@ -8,6 +18,6 @@ export default defineConfig({
     seed: "tsx prisma/seed.ts",
   },
   datasource: {
-    url: env("DATABASE_URL"),
+    url: datasourceUrl.toString(),
   },
 });

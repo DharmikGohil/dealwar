@@ -6,7 +6,7 @@ Create a Blueprint from `render.yaml`. Supply every `sync: false` value in the R
 
 ## Supabase
 
-Use a Singapore-region project to match the Render service. Put the Supabase session-pooler URL in Render as `DATABASE_URL`; require TLS in the connection string. Do not expose the database password to the browser.
+Use a Singapore-region project to match the Render service. Put the Supabase session-pooler URL in Render as `DATABASE_URL`. The application and migration runner pin Supabase's published root CA and verify the pooler hostname; the certificate is public and checked into `certs/`. Do not expose the database password to the browser.
 
 The free plan has no automatic backups. Add `SUPABASE_DIRECT_URL` and a long random `BACKUP_ENCRYPTION_PASSWORD` as GitHub Actions secrets, run the database-backup workflow manually once, download the encrypted artifact, and prove a restore into a temporary database before launch.
 
