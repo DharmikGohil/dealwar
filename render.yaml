@@ -4,11 +4,9 @@ services:
     runtime: node
     plan: free
     region: singapore
-    buildCommand: npm ci && npm run build
-    preDeployCommand: npm run db:deploy
+    buildCommand: npm ci && npm run build && npm run db:deploy
     startCommand: npm run start
     healthCheckPath: /api/health
-    maxShutdownDelaySeconds: 30
     envVars:
       - key: NODE_ENV
         value: production
