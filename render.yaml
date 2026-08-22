@@ -41,17 +41,17 @@ services:
       - key: DEAL_ENTRY_FEE_CENTS
         value: "1900"
       - key: OBJECT_STORAGE_ENDPOINT
-        sync: false
+        value: https://sttmgihpfcuwtmdiyyoa.storage.supabase.co/storage/v1/s3
       - key: OBJECT_STORAGE_REGION
-        value: auto
+        value: ap-southeast-1
       - key: OBJECT_STORAGE_BUCKET
-        sync: false
+        value: dealwar-assets
       - key: OBJECT_STORAGE_ACCESS_KEY_ID
         sync: false
       - key: OBJECT_STORAGE_SECRET_ACCESS_KEY
         sync: false
       - key: OBJECT_STORAGE_PUBLIC_URL
-        sync: false
+        value: https://sttmgihpfcuwtmdiyyoa.supabase.co/storage/v1/object/public/dealwar-assets
       - key: ADMIN_EMAILS
         sync: false
       - key: CRON_SECRET
