@@ -1,0 +1,47 @@
+name: quality
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: dealwar
+          POSTGRES_USER: dealwar
+          POSTGRES_PASSWORD: dealwar
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U dealwar -d dealwar"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      BETTER_AUTH_URL: http://localhost:3000
+      DATABASE_URL: postgresql://dealwar:dealwar@localhost:5432/dealwar?schema=public
+      BETTER_AUTH_SECRET: ci-only-better-auth-secret-at-least-32-characters
+      ABUSE_HASH_SECRET: ci-only-abuse-hash-secret-at-least-32-characters
+      COUPON_ENCRYPTION_KEY: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+      EMAIL_FROM: DealWar <ci@example.com>
+      SUPPORT_EMAIL: ci@example.com
+      CRON_SECRET: ci-only-cron-secret-at-least-24-characters
+      DEAL_ENTRY_FEE_CENTS: 1900
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run db:deploy
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run test:integration
+      - run: npm run build

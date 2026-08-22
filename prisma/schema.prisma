@@ -1,0 +1,418 @@
+generator client {
+  provider   = "prisma-client"
+  output     = "../src/generated/prisma"
+  engineType = "client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum GlobalRole {
+  USER
+  MODERATOR
+  ADMIN
+}
+
+enum MembershipRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum VerificationMethod {
+  DNS_TXT
+  EMAIL_DOMAIN
+  MANUAL
+}
+
+enum ProductStatus {
+  DRAFT
+  PENDING_REVIEW
+  ACTIVE
+  REJECTED
+  SUSPENDED
+  ARCHIVED
+}
+
+enum RoundStatus {
+  DRAFT
+  SCHEDULED
+  LIVE
+  ENDED
+  CANCELLED
+}
+
+enum DealStatus {
+  DRAFT
+  PENDING_PAYMENT
+  PENDING_REVIEW
+  SCHEDULED
+  LIVE
+  PAUSED
+  ENDED
+  REJECTED
+  CANCELLED
+}
+
+enum CouponStatus {
+  AVAILABLE
+  RESERVED
+  CLAIMED
+  VOID
+}
+
+enum ClaimStatus {
+  RESERVED
+  DELIVERED
+  REDEEMED
+  REVOKED
+  EXPIRED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+  DISPUTED
+}
+
+enum ModerationStatus {
+  OPEN
+  APPROVED
+  REJECTED
+  ESCALATED
+  RESOLVED
+}
+
+enum WebhookStatus {
+  RECEIVED
+  PROCESSING
+  PROCESSED
+  FAILED
+  IGNORED
+}
+
+model User {
+  id             String        @id @default(cuid())
+  name           String
+  email          String        @unique
+  emailVerified  Boolean       @default(false)
+  image          String?
+  role           GlobalRole    @default(USER)
+  banned         Boolean       @default(false)
+  banReason      String?
+  banExpires     DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  sessions       Session[]
+  accounts       Account[]
+  memberships    Membership[]
+  createdOrgs    Organization[] @relation("OrganizationCreator")
+  claims         Claim[]
+  moderationActs ModerationCase[] @relation("ModerationActor")
+  auditLogs      AuditLog[]     @relation("AuditActor")
+
+  @@index([role])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model Account {
+  id                    String    @id @default(cuid())
+  accountId             String
+  providerId            String
+  userId                String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, accountId])
+  @@index([userId])
+}
+
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@index([expiresAt])
+}
+
+model RateLimit {
+  id          String @id @default(cuid())
+  key         String @unique
+  count       Int
+  lastRequest BigInt
+}
+
+model Organization {
+  id              String               @id @default(cuid())
+  name            String
+  slug            String               @unique
+  website         String
+  billingEmail    String
+  createdById     String
+  verifiedAt      DateTime?
+  verificationMethod VerificationMethod?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  createdBy       User                 @relation("OrganizationCreator", fields: [createdById], references: [id])
+  memberships     Membership[]
+  products        Product[]
+  domainChallenges DomainChallenge[]
+
+  @@index([createdById])
+  @@index([verifiedAt])
+}
+
+model Membership {
+  id             String         @id @default(cuid())
+  userId         String
+  organizationId String
+  role           MembershipRole @default(MEMBER)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId])
+  @@index([organizationId, role])
+}
+
+model DomainChallenge {
+  id             String             @id @default(cuid())
+  organizationId String
+  hostname       String
+  tokenHash      String             @unique
+  method         VerificationMethod @default(DNS_TXT)
+  expiresAt      DateTime
+  verifiedAt     DateTime?
+  createdAt      DateTime           @default(now())
+  organization   Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, expiresAt])
+}
+
+model Product {
+  id             String        @id @default(cuid())
+  organizationId String
+  slug           String        @unique
+  name           String
+  tagline        String
+  description    String
+  websiteUrl     String
+  logoUrl        String?
+  accentColor    String        @default("#FF4F1F")
+  status         ProductStatus @default(DRAFT)
+  rejectionNote  String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  deals          Deal[]
+
+  @@index([organizationId, status])
+  @@index([status, createdAt])
+}
+
+model Round {
+  id          String      @id @default(cuid())
+  slug        String      @unique
+  name        String
+  strapline   String
+  startsAt    DateTime
+  endsAt      DateTime
+  status      RoundStatus @default(DRAFT)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  deals       Deal[]
+
+  @@index([status, startsAt, endsAt])
+}
+
+model Deal {
+  id                    String     @id @default(cuid())
+  productId             String
+  roundId               String
+  slug                  String     @unique
+  headline              String
+  terms                 String
+  redemptionUrl         String
+  creditAmountCents     Int
+  inventoryCount        Int
+  availableCount        Int
+  claimedCount          Int        @default(0)
+  currency              String     @default("USD")
+  scoreCents            BigInt
+  status                DealStatus @default(DRAFT)
+  entryFeeCents         Int
+  liveAt                DateTime?
+  endsAt                DateTime?
+  reviewedAt            DateTime?
+  createdAt             DateTime   @default(now())
+  updatedAt             DateTime   @updatedAt
+  product               Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  round                 Round      @relation(fields: [roundId], references: [id], onDelete: Restrict)
+  coupons               CouponCode[]
+  claims                Claim[]
+  payments              Payment[]
+  moderationCases       ModerationCase[]
+  clicks                ClickEvent[]
+
+  @@unique([productId, roundId])
+  @@index([roundId, status, scoreCents, liveAt])
+  @@index([status, endsAt])
+}
+
+model CouponCode {
+  id             String       @id @default(cuid())
+  dealId         String
+  codeHash       String       @unique
+  encryptedCode  String
+  encryptionIv   String
+  encryptionTag  String
+  status         CouponStatus @default(AVAILABLE)
+  reservedUntil  DateTime?
+  claimedAt      DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  deal           Deal         @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  claim          Claim?
+
+  @@index([dealId, status, createdAt])
+  @@index([status, reservedUntil])
+}
+
+model Claim {
+  id             String      @id @default(cuid())
+  dealId         String
+  couponCodeId   String      @unique
+  userId         String
+  idempotencyKey String      @unique
+  emailHash      String
+  ipHash         String
+  userAgentHash  String
+  status         ClaimStatus @default(RESERVED)
+  deliveredAt    DateTime?
+  redeemedAt     DateTime?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  deal           Deal        @relation(fields: [dealId], references: [id], onDelete: Restrict)
+  couponCode     CouponCode  @relation(fields: [couponCodeId], references: [id], onDelete: Restrict)
+  user           User        @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@unique([dealId, userId])
+  @@index([dealId, status, createdAt])
+  @@index([userId, createdAt])
+  @@index([emailHash, createdAt])
+  @@index([ipHash, createdAt])
+}
+
+model Payment {
+  id                String        @id @default(cuid())
+  dealId            String
+  provider          String        @default("dodo")
+  providerSessionId String?       @unique
+  providerPaymentId String?       @unique
+  providerRefundId  String?       @unique
+  amountCents       Int
+  currency          String        @default("usd")
+  status            PaymentStatus @default(PENDING)
+  receiptUrl        String?
+  paidAt            DateTime?
+  refundedAt        DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  deal              Deal          @relation(fields: [dealId], references: [id], onDelete: Restrict)
+
+  @@index([dealId, status])
+  @@index([status, createdAt])
+}
+
+model WebhookEvent {
+  id          String        @id @default(cuid())
+  provider    String
+  externalId  String
+  eventType   String
+  payloadHash String
+  status      WebhookStatus @default(RECEIVED)
+  attempts    Int           @default(0)
+  lastError   String?
+  processedAt DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@unique([provider, externalId])
+  @@index([status, createdAt])
+}
+
+model ModerationCase {
+  id          String           @id @default(cuid())
+  dealId      String
+  actorId     String?
+  status      ModerationStatus @default(OPEN)
+  reasonCode  String?
+  notes       String?
+  createdAt   DateTime         @default(now())
+  resolvedAt  DateTime?
+  deal        Deal             @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  actor       User?            @relation("ModerationActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@index([dealId, createdAt])
+}
+
+model ClickEvent {
+  id            String   @id @default(cuid())
+  dealId        String
+  visitorHash   String
+  destination   String
+  occurredAt    DateTime @default(now())
+  deal          Deal     @relation(fields: [dealId], references: [id], onDelete: Cascade)
+
+  @@unique([dealId, visitorHash, occurredAt])
+  @@index([dealId, occurredAt])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  action     String
+  targetType String
+  targetId   String
+  requestId  String?
+  ipHash     String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+  actor      User?    @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([targetType, targetId, createdAt])
+  @@index([actorId, createdAt])
+  @@index([action, createdAt])
+}

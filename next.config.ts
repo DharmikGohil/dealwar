@@ -1,0 +1,31 @@
+import type { NextConfig } from "next";
+
+const securityHeaders = [
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "X-Frame-Options", value: "DENY" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=(self)" },
+  { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
+  { key: "Cross-Origin-Resource-Policy", value: "same-origin" },
+];
+
+const nextConfig: NextConfig = {
+  output: "standalone",
+  poweredByHeader: false,
+  reactStrictMode: true,
+  experimental: {
+    // TypeScript 5 ships the compiler API. Avoid the detached CLI capture path,
+    // which drops piped output on some Node 24 Linux hosts.
+    useTypeScriptCli: false,
+  },
+  async headers() {
+    return [
+      {
+        source: "/(.*)",
+        headers: securityHeaders,
+      },
+    ];
+  },
+};
+
+export default nextConfig;

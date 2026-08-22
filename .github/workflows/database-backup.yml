@@ -1,0 +1,35 @@
+name: Encrypted database backup
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "23 2 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install --yes postgresql-client
+
+      - name: Create database dump
+        env:
+          SUPABASE_DIRECT_URL: ${{ secrets.SUPABASE_DIRECT_URL }}
+        run: pg_dump "$SUPABASE_DIRECT_URL" --format=custom --no-owner --no-privileges --file=dealwar.dump
+
+      - name: Encrypt database dump
+        env:
+          BACKUP_ENCRYPTION_PASSWORD: ${{ secrets.BACKUP_ENCRYPTION_PASSWORD }}
+        run: gpg --batch --yes --pinentry-mode loopback --passphrase "$BACKUP_ENCRYPTION_PASSWORD" --symmetric --cipher-algo AES256 --output dealwar.dump.gpg dealwar.dump
+
+      - name: Upload encrypted backup
+        uses: actions/upload-artifact@v4
+        with:
+          name: dealwar-db-${{ github.run_id }}
+          path: dealwar.dump.gpg
+          if-no-files-found: error
+          retention-days: 14
