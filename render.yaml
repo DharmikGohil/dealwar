@@ -5,7 +5,7 @@ services:
     plan: free
     region: singapore
     buildCommand: npm ci && npm run build && mkdir -p .next/standalone/.next && cp -R .next/static .next/standalone/.next/static && npm run db:deploy
-    startCommand: node .next/standalone/server.js
+    startCommand: HOSTNAME=0.0.0.0 node .next/standalone/server.js
     healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
