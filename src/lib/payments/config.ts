@@ -1,0 +1,15 @@
+export const requiredDodoWebhookEvents = [
+  "payment.succeeded",
+  "payment.failed",
+  "payment.processing",
+  "payment.cancelled",
+  "refund.succeeded",
+  "refund.failed",
+  "dispute.opened",
+  "dispute.expired",
+  "dispute.accepted",
+  "dispute.cancelled",
+  "dispute.challenged",
+  "dispute.won",
+  "dispute.lost",
+] as const;

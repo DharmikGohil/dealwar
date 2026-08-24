@@ -34,18 +34,21 @@ Subscribe to:
 - `refund.succeeded`
 - `refund.failed`
 - `dispute.opened`
+- `dispute.expired`
 - `dispute.accepted`
 - `dispute.cancelled`
+- `dispute.challenged`
 - `dispute.won`
 - `dispute.lost`
 
-DealWar verifies the Standard Webhooks signature, business ID, internal metadata, checkout session, product ID, currency, and server-derived line-item amount. The webhook—not the browser redirect—is authoritative for fulfillment.
+DealWar verifies the Standard Webhooks signature, business ID, internal metadata, checkout session, product ID, currency, and server-derived line-item amount. A browser redirect is never proof of payment: fulfillment requires a verified webhook or an authenticated server-to-server reconciliation with Dodo.
 
 ## Activation
 
 1. Keep `DODO_PAYMENTS_ENVIRONMENT=test_mode` and `PAYMENTS_ENABLED=false` for the public review site.
 2. After Dodo approval, set all Dodo environment variables and temporarily enable test payments.
-3. Test success, cancellation, failure, rejection refund, partial/full refund, dispute, duplicate delivery, invalid signature, and mismatched amount handling.
-4. Set `DODO_PAYMENTS_ENVIRONMENT=live_mode`, rotate to live credentials, and set `PAYMENTS_ENABLED=true` in the same controlled release.
+3. Run `npm run dodo:verify`. It validates the Dodo business, product, one-time USD/PWYW pricing, and webhook event coverage.
+4. Test success, cancellation, failure, retry, return reconciliation, rejection refund, partial/full refund, dispute, duplicate delivery, invalid signature, and mismatched amount handling. Use Dodo's test cards only in test mode.
+5. Set `DODO_PAYMENTS_ENVIRONMENT=live_mode`, rotate to separate live product/API/webhook credentials, run `npm run dodo:verify` again, and set `PAYMENTS_ENABLED=true` in the same controlled release.
 
 When moving to `dealwar.lol`, add the new webhook endpoint and prove test delivery before disabling the temporary endpoint.

@@ -41,7 +41,7 @@ npm run test:integration  # requires the local PostgreSQL container
 npm run build
 ```
 
-The integration suite uses isolated temporary rows and proves concurrent claims receive distinct coupon inventory while counters remain consistent.
+The integration suite uses isolated temporary rows and proves concurrent claims receive distinct coupon inventory, payment transitions are idempotent, and terminal refund states cannot be regressed by late events.
 
 ## Production configuration
 

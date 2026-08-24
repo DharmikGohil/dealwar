@@ -1,64 +1,16 @@
 import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
-import type { Payment } from "dodopayments/resources/payments";
 import { db } from "@/lib/db";
 import { env, paymentsConfigured } from "@/lib/env";
 import { dodo, paymentProvider } from "@/lib/payments/dodo";
+import { resolveStoredPayment, validateDodoSucceededPayment } from "@/lib/payments/reconciliation";
+import {
+  recordDodoPaymentFailed,
+  recordDodoPaymentProcessing,
+  recordDodoPaymentSucceeded,
+} from "@/lib/payments/state";
 
 export const runtime = "nodejs";
-
-function metadataString(metadata: Record<string, unknown>, key: string) {
-  const value = metadata[key];
-  return typeof value === "string" ? value : typeof value === "number" ? String(value) : null;
-}
-
-async function resolveStoredPayment(payment: Payment) {
-  const internalPaymentId = metadataString(payment.metadata, "dealwar_payment_id");
-  if (internalPaymentId) return db.payment.findUnique({ where: { id: internalPaymentId } });
-  if (payment.checkout_session_id) {
-    return db.payment.findUnique({ where: { providerSessionId: payment.checkout_session_id } });
-  }
-  return db.payment.findUnique({ where: { providerPaymentId: payment.payment_id } });
-}
-
-async function validateSucceededPayment(payment: Payment) {
-  if (!dodo || !env.DODO_PAYMENTS_PRODUCT_ID) throw new Error("Dodo Payments is not configured.");
-  const storedPayment = await resolveStoredPayment(payment);
-  if (!storedPayment || storedPayment.provider !== paymentProvider) {
-    throw new Error("Payment does not match a DealWar order.");
-  }
-  const dealId = metadataString(payment.metadata, "dealwar_deal_id");
-  const expectedAmount = metadataString(payment.metadata, "dealwar_expected_amount_cents");
-  if (
-    !dealId ||
-    dealId !== storedPayment.dealId ||
-    expectedAmount !== String(storedPayment.amountCents) ||
-    payment.status !== "succeeded" ||
-    (payment.checkout_session_id && storedPayment.providerSessionId !== payment.checkout_session_id)
-  ) {
-    throw new Error("Payment metadata, state, or checkout session is invalid.");
-  }
-  if (
-    !payment.product_cart?.some(
-      (item) => item.product_id === env.DODO_PAYMENTS_PRODUCT_ID && item.quantity === 1,
-    )
-  ) {
-    throw new Error("Payment does not contain the configured DealWar entry product.");
-  }
-
-  const lineItems = await dodo.payments.retrieveLineItems(payment.payment_id);
-  const entryItem = lineItems.items.find((item) => item.items_id === env.DODO_PAYMENTS_PRODUCT_ID);
-  const amountBeforeExclusiveTax = entryItem ? entryItem.amount - entryItem.tax : -1;
-  if (
-    lineItems.currency !== "USD" ||
-    lineItems.items.length !== 1 ||
-    !entryItem ||
-    (entryItem.amount !== storedPayment.amountCents && amountBeforeExclusiveTax !== storedPayment.amountCents)
-  ) {
-    throw new Error("Payment currency or line-item amount does not match the DealWar order.");
-  }
-  return storedPayment;
-}
 
 export async function POST(request: Request) {
   if (!paymentsConfigured || !dodo || !env.DODO_PAYMENTS_WEBHOOK_KEY) {
@@ -98,66 +50,28 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Webhook identifier was reused with different content." }, { status: 409 });
   }
   const lock = await db.webhookEvent.updateMany({
-    where: { id: stored.id, status: { in: ["RECEIVED", "FAILED"] } },
+    where: {
+      id: stored.id,
+      OR: [
+        { status: { in: ["RECEIVED", "FAILED"] } },
+        { status: "PROCESSING", updatedAt: { lt: new Date(Date.now() - 60_000) } },
+      ],
+    },
     data: { status: "PROCESSING", attempts: { increment: 1 } },
   });
   if (lock.count === 0) return NextResponse.json({ received: true, duplicate: true });
 
   try {
     if (event.type === "payment.succeeded") {
-      const storedPayment = await validateSucceededPayment(event.data);
-      await db.$transaction(async (tx) => {
-        await tx.payment.update({
-          where: { id: storedPayment.id },
-          data: {
-            status: "SUCCEEDED",
-            paidAt: new Date(event.data.updated_at || event.timestamp),
-            providerPaymentId: event.data.payment_id,
-            receiptUrl: event.data.invoice_url,
-          },
-        });
-        await tx.deal.updateMany({
-          where: { id: storedPayment.dealId, status: { in: ["PENDING_PAYMENT", "CANCELLED"] } },
-          data: { status: "PENDING_REVIEW" },
-        });
-        await tx.auditLog.create({
-          data: {
-            action: "payment.succeeded",
-            targetType: "Deal",
-            targetId: storedPayment.dealId,
-            metadata: { provider: paymentProvider, webhookId, providerPaymentId: event.data.payment_id },
-          },
-        });
-      });
+      const storedPayment = await validateDodoSucceededPayment(event.data);
+      await recordDodoPaymentSucceeded(storedPayment, event.data, "webhook", webhookId);
     } else if (event.type === "payment.processing") {
       const storedPayment = await resolveStoredPayment(event.data);
-      if (storedPayment?.status === "PENDING") {
-        await db.payment.update({
-          where: { id: storedPayment.id },
-          data: { providerPaymentId: event.data.payment_id },
-        });
-      }
+      if (storedPayment) await recordDodoPaymentProcessing(storedPayment, event.data.payment_id);
     } else if (event.type === "payment.failed" || event.type === "payment.cancelled") {
       const storedPayment = await resolveStoredPayment(event.data);
-      if (storedPayment?.status === "PENDING") {
-        await db.$transaction([
-          db.payment.update({
-            where: { id: storedPayment.id },
-            data: { status: "FAILED", providerPaymentId: event.data.payment_id },
-          }),
-          db.deal.updateMany({
-            where: { id: storedPayment.dealId, status: "PENDING_PAYMENT" },
-            data: { status: "CANCELLED" },
-          }),
-          db.auditLog.create({
-            data: {
-              action: event.type === "payment.failed" ? "payment.failed" : "payment.cancelled",
-              targetType: "Deal",
-              targetId: storedPayment.dealId,
-              metadata: { provider: paymentProvider, webhookId, providerPaymentId: event.data.payment_id },
-            },
-          }),
-        ]);
+      if (storedPayment) {
+        await recordDodoPaymentFailed(storedPayment, event.data.payment_id, event.type, "webhook", webhookId);
       }
     } else if (event.type === "refund.succeeded") {
       const storedPayment = await db.payment.findUnique({ where: { providerPaymentId: event.data.payment_id } });
@@ -185,7 +99,36 @@ export async function POST(request: Request) {
           }),
         ]);
       }
-    } else if (event.type === "dispute.opened" || event.type === "dispute.accepted" || event.type === "dispute.lost") {
+    } else if (event.type === "refund.failed") {
+      const storedPayment = await db.payment.findUnique({ where: { providerPaymentId: event.data.payment_id } });
+      if (storedPayment) {
+        await db.$transaction([
+          db.payment.update({
+            where: { id: storedPayment.id },
+            data: { providerRefundId: event.data.refund_id },
+          }),
+          db.auditLog.create({
+            data: {
+              action: "payment.refund_failed",
+              targetType: "Deal",
+              targetId: storedPayment.dealId,
+              metadata: {
+                provider: paymentProvider,
+                webhookId,
+                refundId: event.data.refund_id,
+                reason: event.data.reason,
+              },
+            },
+          }),
+        ]);
+      }
+    } else if (
+      event.type === "dispute.opened" ||
+      event.type === "dispute.expired" ||
+      event.type === "dispute.accepted" ||
+      event.type === "dispute.challenged" ||
+      event.type === "dispute.lost"
+    ) {
       const storedPayment = await db.payment.findUnique({ where: { providerPaymentId: event.data.payment_id } });
       if (storedPayment) {
         await db.$transaction([
@@ -209,6 +152,10 @@ export async function POST(request: Request) {
       if (storedPayment?.status === "DISPUTED") {
         await db.$transaction([
           db.payment.update({ where: { id: storedPayment.id }, data: { status: "SUCCEEDED" } }),
+          db.deal.updateMany({
+            where: { id: storedPayment.dealId, status: "PAUSED" },
+            data: { status: "PENDING_REVIEW" },
+          }),
           db.auditLog.create({
             data: {
               action: event.type,
