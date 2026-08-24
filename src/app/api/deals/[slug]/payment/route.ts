@@ -29,7 +29,7 @@ async function ownedDeal(id: string) {
   return { deal, ...access };
 }
 
-export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function POST(request: Request, { params }: { params: Promise<{ slug: string }> }) {
   const id = requestId(request);
   try {
     assertTrustedOrigin(request);
@@ -37,7 +37,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       throw new ApiError(503, "Payments are temporarily unavailable.", "payments_unavailable");
     }
 
-    const { id: dealId } = await params;
+    const { slug: dealId } = await params;
     const { action } = paymentActionSchema.parse(await request.json());
     const { deal, user } = await ownedDeal(dealId);
     const latestPayment = deal.payments[0];
