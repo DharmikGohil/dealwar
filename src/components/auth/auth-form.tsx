@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, LoaderCircle } from "lucide-react";
+import { ArrowRight, LoaderCircle, MailCheck } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -11,6 +11,7 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState<string | null>(null);
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -28,6 +29,10 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
         setError(result.error.message || "Authentication failed.");
         return;
       }
+      if (mode === "sign-up" && !result.data?.token) {
+        setVerificationEmail(email);
+        return;
+      }
       router.push("/dashboard");
       router.refresh();
     } catch {
@@ -35,6 +40,16 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
     } finally {
       setPending(false);
     }
+  }
+
+  if (verificationEmail) {
+    return (
+      <div className="auth-success" role="status">
+        <MailCheck size={28} aria-hidden="true" />
+        <strong>Check your inbox.</strong>
+        <p>We sent a secure verification link to {verificationEmail}. Open it to activate your account and enter the control room.</p>
+      </div>
+    );
   }
 
   return (

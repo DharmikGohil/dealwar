@@ -32,6 +32,7 @@ export async function requireUser() {
 
 export async function requireRole(roles: GlobalRole[]) {
   const user = await requireUser();
+  if (!user.emailVerified) redirect("/dashboard");
   if (!roles.includes(user.role)) redirect("/dashboard");
   return user;
 }

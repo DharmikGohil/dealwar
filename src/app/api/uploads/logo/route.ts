@@ -1,7 +1,6 @@
-import { headers } from "next/headers";
 import { z } from "zod";
-import { auth } from "@/lib/auth";
-import { ApiError, apiError, requestId } from "@/lib/api";
+import { ApiError, apiError, assertTrustedOrigin, requestId } from "@/lib/api";
+import { requireApiUser } from "@/lib/api-auth";
 import { objectStorageConfigured } from "@/lib/env";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { requestFingerprint } from "@/lib/security";
@@ -21,20 +20,23 @@ const extensions: Record<string, string> = {
 export async function POST(request: Request) {
   const id = requestId(request);
   try {
+    assertTrustedOrigin(request);
     if (!objectStorageConfigured) {
       throw new ApiError(503, "Logo uploads are not configured.", "storage_unavailable");
     }
-    const session = await auth.api.getSession({ headers: await headers() });
-    if (!session) throw new ApiError(401, "Sign in to upload a logo.", "unauthorized");
+    const user = await requireApiUser();
+    if (!user.emailVerified) {
+      throw new ApiError(403, "Verify your email before uploading a logo.", "email_unverified");
+    }
     const fingerprint = requestFingerprint(request);
-    await enforceRateLimit({ key: `logo:${session.user.id}:${fingerprint.ipHash}`, limit: 12, windowSeconds: 3600 });
+    await enforceRateLimit({ key: `logo:${user.id}:${fingerprint.ipHash}`, limit: 12, windowSeconds: 3600 });
     const input = requestSchema.parse(await request.json());
     const extension = extensions[input.contentType];
     if (!allowedLogoTypes.has(input.contentType) || !extension) {
       throw new ApiError(415, "Use a PNG, JPEG, or WebP image.", "unsupported_media_type");
     }
     const result = await createLogoUpload({
-      userId: session.user.id,
+      userId: user.id,
       contentType: input.contentType,
       extension,
     });

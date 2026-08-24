@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { ApiError, apiError, requestId } from "@/lib/api";
+import { ApiError, apiError, assertTrustedOrigin, requestId } from "@/lib/api";
 import { requireApiRole } from "@/lib/api-auth";
 import { db } from "@/lib/db";
 import { env, paymentsConfigured } from "@/lib/env";
@@ -15,6 +15,7 @@ const actionSchema = z.object({
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
   const requestIdentifier = requestId(request);
   try {
+    assertTrustedOrigin(request);
     const moderator = await requireApiRole(["ADMIN", "MODERATOR"]);
     const { id } = await context.params;
     const input = actionSchema.parse(await request.json());

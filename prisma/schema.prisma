@@ -96,24 +96,24 @@ enum WebhookStatus {
 }
 
 model User {
-  id             String        @id @default(cuid())
+  id             String           @id @default(cuid())
   name           String
-  email          String        @unique
-  emailVerified  Boolean       @default(false)
+  email          String           @unique
+  emailVerified  Boolean          @default(false)
   image          String?
-  role           GlobalRole    @default(USER)
-  banned         Boolean       @default(false)
+  role           GlobalRole       @default(USER)
+  banned         Boolean          @default(false)
   banReason      String?
   banExpires     DateTime?
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
   sessions       Session[]
   accounts       Account[]
   memberships    Membership[]
-  createdOrgs    Organization[] @relation("OrganizationCreator")
+  createdOrgs    Organization[]   @relation("OrganizationCreator")
   claims         Claim[]
   moderationActs ModerationCase[] @relation("ModerationActor")
-  auditLogs      AuditLog[]     @relation("AuditActor")
+  auditLogs      AuditLog[]       @relation("AuditActor")
 
   @@index([role])
 }
@@ -135,6 +135,7 @@ model Session {
 
 model Account {
   id                    String    @id @default(cuid())
+  issuer                String
   accountId             String
   providerId            String
   userId                String
@@ -149,7 +150,7 @@ model Account {
   updatedAt             DateTime  @updatedAt
   user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([providerId, accountId])
+  @@unique([issuer, accountId])
   @@index([userId])
 }
 
@@ -173,20 +174,20 @@ model RateLimit {
 }
 
 model Organization {
-  id              String               @id @default(cuid())
-  name            String
-  slug            String               @unique
-  website         String
-  billingEmail    String
-  createdById     String
-  verifiedAt      DateTime?
+  id                 String              @id @default(cuid())
+  name               String
+  slug               String              @unique
+  website            String
+  billingEmail       String
+  createdById        String
+  verifiedAt         DateTime?
   verificationMethod VerificationMethod?
-  createdAt       DateTime             @default(now())
-  updatedAt       DateTime             @updatedAt
-  createdBy       User                 @relation("OrganizationCreator", fields: [createdById], references: [id])
-  memberships     Membership[]
-  products        Product[]
-  domainChallenges DomainChallenge[]
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  createdBy          User                @relation("OrganizationCreator", fields: [createdById], references: [id])
+  memberships        Membership[]
+  products           Product[]
+  domainChallenges   DomainChallenge[]
 
   @@index([createdById])
   @@index([verifiedAt])
@@ -242,48 +243,48 @@ model Product {
 }
 
 model Round {
-  id          String      @id @default(cuid())
-  slug        String      @unique
-  name        String
-  strapline   String
-  startsAt    DateTime
-  endsAt      DateTime
-  status      RoundStatus @default(DRAFT)
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  deals       Deal[]
+  id        String      @id @default(cuid())
+  slug      String      @unique
+  name      String
+  strapline String
+  startsAt  DateTime
+  endsAt    DateTime
+  status    RoundStatus @default(DRAFT)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  deals     Deal[]
 
   @@index([status, startsAt, endsAt])
 }
 
 model Deal {
-  id                    String     @id @default(cuid())
-  productId             String
-  roundId               String
-  slug                  String     @unique
-  headline              String
-  terms                 String
-  redemptionUrl         String
-  creditAmountCents     Int
-  inventoryCount        Int
-  availableCount        Int
-  claimedCount          Int        @default(0)
-  currency              String     @default("USD")
-  scoreCents            BigInt
-  status                DealStatus @default(DRAFT)
-  entryFeeCents         Int
-  liveAt                DateTime?
-  endsAt                DateTime?
-  reviewedAt            DateTime?
-  createdAt             DateTime   @default(now())
-  updatedAt             DateTime   @updatedAt
-  product               Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
-  round                 Round      @relation(fields: [roundId], references: [id], onDelete: Restrict)
-  coupons               CouponCode[]
-  claims                Claim[]
-  payments              Payment[]
-  moderationCases       ModerationCase[]
-  clicks                ClickEvent[]
+  id                String           @id @default(cuid())
+  productId         String
+  roundId           String
+  slug              String           @unique
+  headline          String
+  terms             String
+  redemptionUrl     String
+  creditAmountCents Int
+  inventoryCount    Int
+  availableCount    Int
+  claimedCount      Int              @default(0)
+  currency          String           @default("USD")
+  scoreCents        BigInt
+  status            DealStatus       @default(DRAFT)
+  entryFeeCents     Int
+  liveAt            DateTime?
+  endsAt            DateTime?
+  reviewedAt        DateTime?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  product           Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
+  round             Round            @relation(fields: [roundId], references: [id], onDelete: Restrict)
+  coupons           CouponCode[]
+  claims            Claim[]
+  payments          Payment[]
+  moderationCases   ModerationCase[]
+  clicks            ClickEvent[]
 
   @@unique([productId, roundId])
   @@index([roundId, status, scoreCents, liveAt])
@@ -291,19 +292,19 @@ model Deal {
 }
 
 model CouponCode {
-  id             String       @id @default(cuid())
-  dealId         String
-  codeHash       String       @unique
-  encryptedCode  String
-  encryptionIv   String
-  encryptionTag  String
-  status         CouponStatus @default(AVAILABLE)
-  reservedUntil  DateTime?
-  claimedAt      DateTime?
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
-  deal           Deal         @relation(fields: [dealId], references: [id], onDelete: Cascade)
-  claim          Claim?
+  id            String       @id @default(cuid())
+  dealId        String
+  codeHash      String       @unique
+  encryptedCode String
+  encryptionIv  String
+  encryptionTag String
+  status        CouponStatus @default(AVAILABLE)
+  reservedUntil DateTime?
+  claimedAt     DateTime?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  deal          Deal         @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  claim         Claim?
 
   @@index([dealId, status, createdAt])
   @@index([status, reservedUntil])
@@ -373,28 +374,28 @@ model WebhookEvent {
 }
 
 model ModerationCase {
-  id          String           @id @default(cuid())
-  dealId      String
-  actorId     String?
-  status      ModerationStatus @default(OPEN)
-  reasonCode  String?
-  notes       String?
-  createdAt   DateTime         @default(now())
-  resolvedAt  DateTime?
-  deal        Deal             @relation(fields: [dealId], references: [id], onDelete: Cascade)
-  actor       User?            @relation("ModerationActor", fields: [actorId], references: [id], onDelete: SetNull)
+  id         String           @id @default(cuid())
+  dealId     String
+  actorId    String?
+  status     ModerationStatus @default(OPEN)
+  reasonCode String?
+  notes      String?
+  createdAt  DateTime         @default(now())
+  resolvedAt DateTime?
+  deal       Deal             @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  actor      User?            @relation("ModerationActor", fields: [actorId], references: [id], onDelete: SetNull)
 
   @@index([status, createdAt])
   @@index([dealId, createdAt])
 }
 
 model ClickEvent {
-  id            String   @id @default(cuid())
-  dealId        String
-  visitorHash   String
-  destination   String
-  occurredAt    DateTime @default(now())
-  deal          Deal     @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  id          String   @id @default(cuid())
+  dealId      String
+  visitorHash String
+  destination String
+  occurredAt  DateTime @default(now())
+  deal        Deal     @relation(fields: [dealId], references: [id], onDelete: Cascade)
 
   @@unique([dealId, visitorHash, occurredAt])
   @@index([dealId, occurredAt])

@@ -23,7 +23,7 @@ export default async function HomePage() {
         </div>
         <div className="hero-grid">
           <div className="hero-copy">
-            <div className="eyebrow"><span className="live-dot" /> Round 001 is live</div>
+            <div className="eyebrow"><span className={round ? "live-dot" : undefined} /> {round ? `${round.name} is live` : "The opening fight is forming"}</div>
             <h1>Outbid them by giving <em>more.</em></h1>
             <p className="hero-deck">
               Companies fight for the top spot with real customer credit. You take the deal. The strongest verified pool wins.
@@ -35,13 +35,13 @@ export default async function HomePage() {
             <p className="hero-footnote"><ShieldCheck size={15} /> Every offer is manually reviewed and backed by unique claim codes.</p>
           </div>
           <aside className="score-poster" aria-label="Live DealWar statistics">
-            <div className="poster-stamp">DW / 001</div>
+            <div className="poster-stamp">DW / {round ? "LIVE" : "STANDBY"}</div>
             <span className="poster-kicker">Value on the table</span>
             <strong>{formatCompactMoney(stats.liveValueCents)}</strong>
             <div className="poster-grid">
               <div><span>live deals</span><b>{formatNumber(stats.liveDeals)}</b></div>
               <div><span>claimed</span><b>{formatNumber(stats.claims)}</b></div>
-              <div><span>round ends</span><b>{round ? timeLeft(round.endsAt) : "soon"}</b></div>
+              <div><span>round ends</span><b>{round ? timeLeft(round.endsAt) : "not scheduled"}</b></div>
             </div>
             <div className="poster-strike">CUSTOMERS / WIN</div>
           </aside>

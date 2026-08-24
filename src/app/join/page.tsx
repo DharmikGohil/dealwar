@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { DealSubmissionForm } from "@/components/deals/deal-submission-form";
 import { getLiveRound } from "@/lib/deals";
-import { env } from "@/lib/env";
+import { env, paymentsActive } from "@/lib/env";
 import { requireUser } from "@/lib/session";
 
 export const metadata = { title: "Enter your company" };
@@ -9,6 +9,22 @@ export const dynamic = "force-dynamic";
 
 export default async function JoinPage() {
   await requireUser();
+  if (!paymentsActive) {
+    return (
+      <section className="join-page">
+        <header className="join-heading">
+          <span className="eyebrow">Company entry / standby</span>
+          <h1>Doors open<br />shortly.</h1>
+          <p>Company entries are paused while secure checkout activation is completed. No inventory or payment details are being accepted yet.</p>
+        </header>
+        <div className="empty-board">
+          <span className="eyebrow">Payments not active</span>
+          <h3>Your offer stays with you until checkout is ready.</h3>
+          <p>DealWar will open submissions only after payment processing, refunds, and webhook verification are fully active.</p>
+        </div>
+      </section>
+    );
+  }
   const round = await getLiveRound();
   if (!round) redirect("/?entry=closed");
   return (

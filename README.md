@@ -45,7 +45,7 @@ The integration suite uses isolated temporary rows and proves concurrent claims 
 
 ## Production configuration
 
-Set every required variable in `.env.example`. A production `/api/health` response remains `503 degraded` until PostgreSQL, Resend, and S3-compatible object storage are configured. Payments can remain deliberately disabled while Dodo reviews the public website; enabling payments makes complete Dodo configuration a readiness requirement.
+Set every required variable in `.env.example`. A production `/api/health` response remains `503 degraded` until PostgreSQL, Resend, and S3-compatible object storage are configured. Payments can remain deliberately disabled while Dodo reviews the public website; enabling payments makes complete Dodo configuration a readiness requirement. Set `ADMIN_EMAILS` to a comma-separated allowlist before the operator signs up; matching new accounts are granted the admin role and the health response reports operator access as configured.
 
 Operational requirements outside this repository:
 

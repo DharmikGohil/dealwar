@@ -1,6 +1,13 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { emailConfigured, env, objectStorageConfigured, paymentsConfigured, paymentsReady } from "@/lib/env";
+import {
+  adminEmails,
+  emailConfigured,
+  env,
+  objectStorageConfigured,
+  paymentsConfigured,
+  paymentsReady,
+} from "@/lib/env";
 
 export async function GET() {
   const started = performance.now();
@@ -11,6 +18,7 @@ export async function GET() {
       payments: paymentsConfigured ? "configured" : env.PAYMENTS_ENABLED ? "missing" : "disabled",
       email: emailConfigured ? "configured" : "missing",
       objectStorage: objectStorageConfigured ? "configured" : "missing",
+      operatorAccess: adminEmails.size > 0 ? "configured" : "missing",
     };
     const ready = env.NODE_ENV !== "production" || (paymentsReady && emailConfigured && objectStorageConfigured);
     return NextResponse.json(

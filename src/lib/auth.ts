@@ -3,7 +3,7 @@ import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
 import { db } from "@/lib/db";
-import { emailConfigured, env } from "@/lib/env";
+import { adminEmails, emailConfigured, env } from "@/lib/env";
 import { sendEmail } from "@/lib/email";
 
 const socialProviders = {
@@ -53,6 +53,19 @@ export const auth = betterAuth({
       "/sign-in/email": { window: 60, max: 5 },
       "/sign-up/email": { window: 3600, max: 5 },
       "/request-password-reset": { window: 3600, max: 3 },
+    },
+  },
+  databaseHooks: {
+    user: {
+      create: {
+        after: async (user) => {
+          if (!adminEmails.has(user.email.trim().toLowerCase())) return;
+          await db.user.update({
+            where: { id: user.id },
+            data: { role: "ADMIN" },
+          });
+        },
+      },
     },
   },
   emailAndPassword: {

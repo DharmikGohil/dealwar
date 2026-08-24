@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
+import { env } from "@/lib/env";
 import { RateLimitError } from "@/lib/rate-limit";
 
 export class ApiError extends Error {
@@ -44,5 +45,19 @@ export function apiError(error: unknown, requestId?: string) {
 }
 
 export function requestId(request: Request) {
-  return request.headers.get("x-request-id") || crypto.randomUUID();
+  const candidate = request.headers.get("rndr-id") || request.headers.get("x-request-id");
+  return candidate && /^[A-Za-z0-9._:-]{1,128}$/.test(candidate)
+    ? candidate
+    : crypto.randomUUID();
+}
+
+export function assertTrustedOrigin(request: Request) {
+  const origin = request.headers.get("origin");
+  try {
+    if (!origin || new URL(origin).origin !== new URL(env.NEXT_PUBLIC_APP_URL).origin) {
+      throw new Error("Origin mismatch");
+    }
+  } catch {
+    throw new ApiError(403, "This request did not come from DealWar.", "invalid_origin");
+  }
 }

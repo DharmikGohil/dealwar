@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ApiError, apiError, requestId } from "@/lib/api";
+import { ApiError, apiError, assertTrustedOrigin, requestId } from "@/lib/api";
 import { sendEmail } from "@/lib/email";
 import { env } from "@/lib/env";
 import { enforceRateLimit } from "@/lib/rate-limit";
@@ -16,6 +16,7 @@ const schema = z.object({
 export async function POST(request: Request) {
   const id = requestId(request);
   try {
+    assertTrustedOrigin(request);
     const fingerprint = requestFingerprint(request);
     await enforceRateLimit({ key: `contact:${fingerprint.ipHash}`, limit: 4, windowSeconds: 3600 });
     const form = await request.formData();

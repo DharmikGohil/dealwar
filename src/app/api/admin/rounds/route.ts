@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { z } from "zod";
-import { ApiError, apiError, requestId } from "@/lib/api";
+import { ApiError, apiError, assertTrustedOrigin, requestId } from "@/lib/api";
 import { requireApiRole } from "@/lib/api-auth";
 import { db } from "@/lib/db";
 import { requestFingerprint } from "@/lib/security";
@@ -20,6 +20,7 @@ const schema = z.object({
 export async function POST(request: Request) {
   const id = requestId(request);
   try {
+    assertTrustedOrigin(request);
     const admin = await requireApiRole(["ADMIN"]);
     const input = schema.parse(await request.json());
     if (input.endsAt <= new Date()) throw new ApiError(422, "The round must end in the future.", "invalid_schedule");

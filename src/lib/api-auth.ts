@@ -15,12 +15,16 @@ export async function requireApiUser() {
 
 export async function requireApiRole(roles: GlobalRole[]) {
   const user = await requireApiUser();
+  if (!user.emailVerified) throw new ApiError(403, "Verify your email before using operator controls.", "email_unverified");
   if (!roles.includes(user.role)) throw new ApiError(403, "Insufficient permission.", "forbidden");
   return user;
 }
 
 export async function requireOrganizationAccess(organizationId: string) {
   const user = await requireApiUser();
+  if (!user.emailVerified) {
+    throw new ApiError(403, "Verify your email before managing a company.", "email_unverified");
+  }
   const membership = await db.membership.findUnique({
     where: { userId_organizationId: { userId: user.id, organizationId } },
   });

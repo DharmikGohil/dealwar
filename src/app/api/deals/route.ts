@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
-import { ApiError, apiError, requestId } from "@/lib/api";
+import { ApiError, apiError, assertTrustedOrigin, requestId } from "@/lib/api";
 import { requireApiUser } from "@/lib/api-auth";
 import { db } from "@/lib/db";
 import { env, paymentsActive } from "@/lib/env";
@@ -15,12 +15,13 @@ import { createDealSchema } from "@/lib/validation/deal";
 export async function POST(request: Request) {
   const id = requestId(request);
   try {
-    if (!paymentsActive && env.NODE_ENV === "production") {
-      throw new ApiError(503, "Company entries are temporarily unavailable.", "payments_unavailable");
-    }
+    assertTrustedOrigin(request);
     const user = await requireApiUser();
     if (!user.emailVerified && env.NODE_ENV === "production") {
       throw new ApiError(403, "Verify your email before submitting a deal.", "email_unverified");
+    }
+    if (!paymentsActive && env.NODE_ENV === "production") {
+      throw new ApiError(503, "Company entries are temporarily unavailable.", "payments_unavailable");
     }
 
     const fingerprint = requestFingerprint(request);

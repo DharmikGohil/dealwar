@@ -1,7 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { resolveTxt } from "node:dns/promises";
 import { NextResponse } from "next/server";
-import { ApiError, apiError, requestId } from "@/lib/api";
+import { ApiError, apiError, assertTrustedOrigin, requestId } from "@/lib/api";
 import { requireOrganizationAccess } from "@/lib/api-auth";
 import { db } from "@/lib/db";
 import { enforceRateLimit } from "@/lib/rate-limit";
@@ -12,6 +12,7 @@ type Context = { params: Promise<{ id: string }> };
 export async function POST(request: Request, context: Context) {
   const id = requestId(request);
   try {
+    assertTrustedOrigin(request);
     const { id: organizationId } = await context.params;
     const { user } = await requireOrganizationAccess(organizationId);
     const organization = await db.organization.findUnique({ where: { id: organizationId } });
@@ -37,6 +38,7 @@ export async function POST(request: Request, context: Context) {
 export async function PATCH(request: Request, context: Context) {
   const id = requestId(request);
   try {
+    assertTrustedOrigin(request);
     const { id: organizationId } = await context.params;
     const { user } = await requireOrganizationAccess(organizationId);
     const fingerprint = requestFingerprint(request);

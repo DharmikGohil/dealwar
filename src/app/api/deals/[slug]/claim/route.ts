@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { ApiError, apiError, requestId } from "@/lib/api";
+import { ApiError, apiError, assertTrustedOrigin, requestId } from "@/lib/api";
 import { requireApiUser } from "@/lib/api-auth";
 import { allocateClaim } from "@/lib/claim-allocation";
 import { db } from "@/lib/db";
@@ -14,6 +14,7 @@ export async function POST(
 ) {
   const id = requestId(request);
   try {
+    assertTrustedOrigin(request);
     const user = await requireApiUser();
     if (!user.emailVerified && env.NODE_ENV === "production") {
       throw new ApiError(403, "Verify your email before claiming a deal.", "email_unverified");
@@ -62,12 +63,15 @@ export async function POST(
       });
     }
 
-    return NextResponse.json({
-      claimId: allocated.claim.id,
-      code: revealedCode,
-      redemptionUrl: allocated.redemptionUrl,
-      repeated: allocated.repeated,
-    });
+    return NextResponse.json(
+      {
+        claimId: allocated.claim.id,
+        code: revealedCode,
+        redemptionUrl: allocated.redemptionUrl,
+        repeated: allocated.repeated,
+      },
+      { headers: { "Cache-Control": "no-store" } },
+    );
   } catch (error) {
     return apiError(error, id);
   }
