@@ -28,6 +28,14 @@ export default async function DashboardDealPage({
   const latestPayment = [...deal.payments].sort((left, right) => right.createdAt.getTime() - left.createdAt.getTime())[0];
   const successfulPayment = deal.payments.find((payment) => payment.status === "SUCCEEDED");
   const paid = Boolean(successfulPayment);
+  const refunded = latestPayment?.status === "REFUNDED";
+  const paymentLabel = paid
+    ? "Paid"
+    : refunded
+      ? "Refunded"
+      : latestPayment?.status === "FAILED"
+        ? "Retry needed"
+        : "Pending";
   const { payment: paymentReturn } = await searchParams;
   const returnState = paymentReturn === "return" || paymentReturn === "cancelled" ? paymentReturn : undefined;
   return (
@@ -35,7 +43,7 @@ export default async function DashboardDealPage({
       <Link href="/dashboard" className="back-link"><ArrowLeft size={16} /> Control room</Link>
       <header className="deal-status-header"><div><span className="eyebrow">{deal.round.name} / entry status</span><h1>{deal.product.name}</h1><p>{deal.headline}</p></div><div className={`big-status status-${deal.status.toLowerCase()}`}><span>Current state</span><strong>{deal.status.replaceAll("_", " ")}</strong></div></header>
       <div className="gate-grid">
-        <div className={paid ? "gate done" : "gate"}><CircleDollarSign /><span>Entry payment</span><strong>{paid ? "Paid" : latestPayment?.status === "FAILED" ? "Retry needed" : "Pending"}</strong><small>{formatMoney(deal.entryFeeCents)}</small></div>
+        <div className={paid ? "gate done" : "gate"}><CircleDollarSign /><span>Entry payment</span><strong>{paymentLabel}</strong><small>{formatMoney(deal.entryFeeCents)}</small></div>
         <div className={deal.product.organization.verifiedAt ? "gate done" : "gate"}><ShieldCheck /><span>Company control</span><strong>{deal.product.organization.verifiedAt ? "Verified" : "Required"}</strong><small>{new URL(deal.product.organization.website).hostname}</small></div>
         <div className={deal.reviewedAt ? "gate done" : "gate"}><Check /><span>Human review</span><strong>{deal.reviewedAt ? "Complete" : "In queue"}</strong><small>Offer, inventory and terms</small></div>
         <div className={deal.status === "LIVE" ? "gate done" : "gate"}><Clock3 /><span>Publication</span><strong>{deal.status === "LIVE" ? "Live" : "Waiting"}</strong><small>{deal.round.endsAt.toLocaleString("en-US")}</small></div>
@@ -43,8 +51,9 @@ export default async function DashboardDealPage({
       <PaymentControl
         dealId={deal.id}
         paid={paid}
+        dealStatus={deal.status}
         paymentStatus={latestPayment?.status || "UNPAID"}
-        receiptUrl={successfulPayment?.receiptUrl}
+        receiptUrl={successfulPayment?.receiptUrl || latestPayment?.receiptUrl}
         returnState={returnState}
       />
       <div className="status-columns">

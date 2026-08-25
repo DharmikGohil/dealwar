@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 
 type PaymentControlProps = {
   dealId: string;
+  dealStatus: string;
   paid: boolean;
   paymentStatus: string;
   receiptUrl?: string | null;
@@ -22,6 +23,7 @@ type PaymentResponse = {
 
 export function PaymentControl({
   dealId,
+  dealStatus,
   paid,
   paymentStatus,
   receiptUrl,
@@ -29,7 +31,9 @@ export function PaymentControl({
 }: PaymentControlProps) {
   const router = useRouter();
   const reconciled = useRef(false);
-  const [busy, setBusy] = useState(returnState === "return" && !paid);
+  const refunded = paymentStatus === "REFUNDED";
+  const paymentClosed = refunded || ["REJECTED", "CANCELLED", "ENDED"].includes(dealStatus);
+  const [busy, setBusy] = useState(returnState === "return" && !paid && !paymentClosed);
   const [message, setMessage] = useState<string | null>(
     returnState === "cancelled" ? "Checkout was cancelled. No completed charge was recorded." : null,
   );
@@ -46,7 +50,7 @@ export function PaymentControl({
   }, [dealId]);
 
   useEffect(() => {
-    if (returnState !== "return" || paid || reconciled.current) return;
+    if (returnState !== "return" || paid || paymentClosed || reconciled.current) return;
     reconciled.current = true;
     void paymentAction("reconcile")
       .then((result) => {
@@ -63,7 +67,7 @@ export function PaymentControl({
         setMessage(error instanceof Error ? error.message : "We could not confirm the payment yet.");
       })
       .finally(() => setBusy(false));
-  }, [paid, paymentAction, returnState, router]);
+  }, [paid, paymentAction, paymentClosed, returnState, router]);
 
   async function startCheckout() {
     setBusy(true);
@@ -93,13 +97,15 @@ export function PaymentControl({
       <div className="payment-control-mark"><LockKeyhole size={24} /></div>
       <div className="payment-control-copy">
         <span className="eyebrow">Secure payment / Dodo Payments</span>
-        <h2>{paid ? "Entry fee confirmed" : paymentStatus === "PENDING" ? "Finish your entry" : "Restart checkout"}</h2>
-        <p>{paid ? "Your company is in the moderation queue. A second charge cannot be created." : "Complete the one-time entry payment to send this offer to human review."}</p>
+        <h2>{paid ? "Entry fee confirmed" : refunded ? "Entry fee refunded" : paymentClosed ? "Entry closed" : paymentStatus === "PENDING" ? "Finish your entry" : "Restart checkout"}</h2>
+        <p>{paid ? "Your company is in the moderation queue. A second charge cannot be created." : refunded ? "Dodo Payments returned the entry fee. This rejected entry cannot be charged again." : paymentClosed ? "This entry is closed and cannot start another checkout." : "Complete the one-time entry payment to send this offer to human review."}</p>
         {message && <p className="payment-message">{message}</p>}
       </div>
       <div className="payment-control-action">
         {paid ? (
           receiptUrl ? <a className="button button-secondary" href={receiptUrl} target="_blank" rel="noreferrer">View receipt <ExternalLink size={15} /></a> : <strong>PAID</strong>
+        ) : paymentClosed ? (
+          <strong>{refunded ? "REFUNDED" : "CLOSED"}</strong>
         ) : (
           <Button type="button" variant="dark" onClick={startCheckout} disabled={busy}>
             {busy ? <><LoaderCircle className="spin" size={16} /> Checking payment</> : <><RotateCcw size={16} /> {paymentStatus === "PENDING" ? "Continue to payment" : "Try payment again"}</>}
