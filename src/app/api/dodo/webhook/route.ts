@@ -63,8 +63,19 @@ export async function POST(request: Request) {
 
   try {
     if (event.type === "payment.succeeded") {
-      const storedPayment = await validateDodoSucceededPayment(event.data);
-      await recordDodoPaymentSucceeded(storedPayment, event.data, "webhook", webhookId);
+      const storedPayment = await resolveStoredPayment(event.data);
+      if (storedPayment) {
+        const validatedPayment = await validateDodoSucceededPayment(event.data, storedPayment);
+        await recordDodoPaymentSucceeded(validatedPayment, event.data, "webhook", webhookId);
+      } else {
+        const metadata = event.data.metadata || {};
+        const claimsDealWarOrder = Object.keys(metadata).some((key) => key.startsWith("dealwar_"));
+        if (claimsDealWarOrder) {
+          throw new Error("DealWar payment metadata does not match a stored order.");
+        }
+        // The Dodo account can also receive payments outside DealWar. They are
+        // authentic business events, but there is no DealWar state to mutate.
+      }
     } else if (event.type === "payment.processing") {
       const storedPayment = await resolveStoredPayment(event.data);
       if (storedPayment) await recordDodoPaymentProcessing(storedPayment, event.data.payment_id);
