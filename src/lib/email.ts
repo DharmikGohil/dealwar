@@ -13,6 +13,7 @@ type EmailInput = {
   actionLabel?: string;
   actionUrl?: string;
   replyTo?: string;
+  idempotencyKey?: string;
 };
 
 function escapeHtml(value: string) {
@@ -40,13 +41,34 @@ export async function sendEmail(input: EmailInput) {
     return { id: "development-email-disabled" };
   }
 
-  const { data, error } = await resend.emails.send({
+  const payload = {
     from: env.EMAIL_FROM,
     to: input.to,
     subject: input.subject,
     html: emailHtml(input),
+    text: `${input.heading}\n\n${input.body}${
+      input.actionLabel && input.actionUrl
+        ? `\n\n${input.actionLabel}: ${input.actionUrl}`
+        : ""
+    }`,
     replyTo: input.replyTo,
-  });
-  if (error) throw new Error(`Email delivery failed: ${error.message}`);
-  return data;
+  };
+
+  let lastError = "Unknown provider error";
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const { data, error } = await resend.emails.send(payload, {
+      idempotencyKey: input.idempotencyKey,
+    });
+    if (!error) return data;
+
+    lastError = error.message;
+    const retryable =
+      error.statusCode === 408 ||
+      error.statusCode === 429 ||
+      (error.statusCode !== null && error.statusCode >= 500);
+    if (!retryable || attempt === 2) break;
+    await new Promise((resolve) => setTimeout(resolve, 250 * 2 ** attempt));
+  }
+
+  throw new Error(`Email delivery failed: ${lastError}`);
 }

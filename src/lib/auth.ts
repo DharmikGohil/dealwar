@@ -1,4 +1,5 @@
 import "server-only";
+import { createHash } from "node:crypto";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
@@ -73,15 +74,55 @@ export const auth = betterAuth({
     requireEmailVerification: emailConfigured,
     minPasswordLength: 12,
     maxPasswordLength: 128,
-    sendResetPassword: async ({ user, url }) => {
-      await sendEmail({
-        to: user.email,
-        subject: "Reset your DealWar password",
-        preview: "A password reset was requested for your DealWar account.",
-        heading: "Reset your password",
-        body: "This link expires shortly. If you did not request a reset, you can safely ignore this email.",
-        actionLabel: "Reset password",
-        actionUrl: url,
+    sendResetPassword: async ({ user, url, token }) => {
+      try {
+        const delivery = await sendEmail({
+          to: user.email,
+          subject: "Reset your DealWar password",
+          preview: "A password reset was requested for your DealWar account.",
+          heading: "Reset your password",
+          body: "This single-use link expires in one hour. If you did not request a reset, you can safely ignore this email.",
+          actionLabel: "Reset password",
+          actionUrl: url,
+          idempotencyKey: `password-reset-${createHash("sha256").update(token).digest("hex")}`,
+        });
+        await db.auditLog.create({
+          data: {
+            actorId: user.id,
+            action: "auth.password_reset_email_accepted",
+            targetType: "User",
+            targetId: user.id,
+            metadata: { provider: "resend", deliveryId: delivery?.id },
+          },
+        }).catch((error) => {
+          console.error("Password reset delivery audit failed", { userId: user.id, error });
+        });
+      } catch (error) {
+        console.error("Password reset email delivery failed", { userId: user.id, error });
+        await db.auditLog.create({
+          data: {
+            actorId: user.id,
+            action: "auth.password_reset_email_failed",
+            targetType: "User",
+            targetId: user.id,
+            metadata: { provider: "resend" },
+          },
+        }).catch((auditError) => {
+          console.error("Password reset failure audit failed", { userId: user.id, error: auditError });
+        });
+        throw error;
+      }
+    },
+    onPasswordReset: async ({ user }) => {
+      await db.auditLog.create({
+        data: {
+          actorId: user.id,
+          action: "auth.password_reset_completed",
+          targetType: "User",
+          targetId: user.id,
+        },
+      }).catch((error) => {
+        console.error("Password reset completion audit failed", { userId: user.id, error });
       });
     },
   },

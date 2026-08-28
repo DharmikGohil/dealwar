@@ -38,7 +38,7 @@ export function PasswordRecoveryForm({ token, invalid }: { token?: string; inval
     }
   }
 
-  if (sent) return <div className="auth-success"><Check /><strong>Check your inbox.</strong><p>If that address has an account, a reset link is on its way.</p></div>;
+  if (sent) return <div className="auth-success"><Check /><strong>Request received.</strong><p>If that address belongs to an account, a reset link should arrive within two minutes. Check Spam too. We show this same message for every address to protect account privacy.</p></div>;
   return (
     <form className="auth-form" onSubmit={submit}>
       {token ? (
