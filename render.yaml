@@ -35,7 +35,7 @@ services:
       - key: DODO_PAYMENTS_ENVIRONMENT
         value: test_mode
       - key: PAYMENTS_ENABLED
-        value: "false"
+        value: "true"
       - key: DEAL_ENTRY_FEE_CENTS
         value: "1900"
       - key: OBJECT_STORAGE_ENDPOINT
