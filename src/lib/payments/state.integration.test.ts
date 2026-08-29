@@ -1,7 +1,11 @@
 import type { Payment as DodoPayment } from "dodopayments/resources/payments";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { db } from "@/lib/db";
-import { recordDodoPaymentFailed, recordDodoPaymentSucceeded } from "@/lib/payments/state";
+import {
+  recordDodoCheckoutExpired,
+  recordDodoPaymentFailed,
+  recordDodoPaymentSucceeded,
+} from "@/lib/payments/state";
 
 const suffix = crypto.randomUUID().slice(0, 8);
 let userId = "";
@@ -141,5 +145,22 @@ describe("payment state transitions", () => {
     await recordDodoPaymentSucceeded(stored, providerPayment(), "webhook", "event-eventual-success");
     expect((await db.payment.findUniqueOrThrow({ where: { id: paymentId } })).status).toBe("SUCCEEDED");
     expect((await db.deal.findUniqueOrThrow({ where: { id: dealId } })).status).toBe("PENDING_REVIEW");
+  });
+
+  it("retires an expired checkout once so a fresh payment can be created", async () => {
+    await db.payment.update({
+      where: { id: paymentId },
+      data: { status: "PENDING", paidAt: null, providerPaymentId: null, receiptUrl: null },
+    });
+    await db.deal.update({ where: { id: dealId }, data: { status: "PENDING_PAYMENT" } });
+    const stored = await db.payment.findUniqueOrThrow({ where: { id: paymentId } });
+
+    expect((await recordDodoCheckoutExpired(stored)).transitioned).toBe(true);
+    expect((await recordDodoCheckoutExpired(stored)).transitioned).toBe(false);
+    expect((await db.payment.findUniqueOrThrow({ where: { id: paymentId } })).status).toBe("FAILED");
+    expect((await db.deal.findUniqueOrThrow({ where: { id: dealId } })).status).toBe("CANCELLED");
+    expect(await db.auditLog.count({
+      where: { targetId: dealId, action: "payment.checkout_expired" },
+    })).toBe(1);
   });
 });

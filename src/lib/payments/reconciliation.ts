@@ -5,10 +5,18 @@ import { db } from "@/lib/db";
 import { env } from "@/lib/env";
 import { dodo, paymentProvider, requireDodo } from "@/lib/payments/dodo";
 import {
+  recordDodoCheckoutExpired,
   recordDodoPaymentFailed,
   recordDodoPaymentProcessing,
   recordDodoPaymentSucceeded,
 } from "@/lib/payments/state";
+
+export const DODO_CHECKOUT_SESSION_TTL_MS = 24 * 60 * 60 * 1000;
+
+export function dodoCheckoutSessionExpired(createdAt: string, now = Date.now()) {
+  const createdAtMs = Date.parse(createdAt);
+  return Number.isFinite(createdAtMs) && now - createdAtMs >= DODO_CHECKOUT_SESSION_TTL_MS;
+}
 
 export function metadataString(metadata: Record<string, unknown>, key: string) {
   const value = metadata[key];
@@ -75,6 +83,10 @@ export async function reconcileDodoPayment(storedPayment: StoredPayment) {
   const client = requireDodo();
   const checkout = await client.checkoutSessions.retrieve(storedPayment.providerSessionId);
   if (!checkout.payment_id || !checkout.payment_status) {
+    if (dodoCheckoutSessionExpired(checkout.created_at)) {
+      const result = await recordDodoCheckoutExpired(storedPayment);
+      return { status: "expired", ...result };
+    }
     return { status: storedPayment.status.toLowerCase(), transitioned: false };
   }
 
@@ -93,6 +105,15 @@ export async function reconcileDodoPayment(storedPayment: StoredPayment) {
       "return_reconciliation",
     );
     return { status: checkout.payment_status, ...result };
+  }
+
+  if (
+    checkout.payment_status === "requires_customer_action" ||
+    checkout.payment_status === "requires_payment_method" ||
+    checkout.payment_status === "requires_confirmation"
+  ) {
+    await recordDodoPaymentProcessing(storedPayment, checkout.payment_id);
+    return { status: "pending", transitioned: false };
   }
 
   await recordDodoPaymentProcessing(storedPayment, checkout.payment_id);

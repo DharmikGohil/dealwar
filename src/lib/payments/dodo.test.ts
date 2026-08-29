@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { buildEntryCheckoutPayload, requiredDodoWebhookEvents } from "@/lib/payments/dodo";
+import {
+  DODO_CHECKOUT_SESSION_TTL_MS,
+  dodoCheckoutSessionExpired,
+} from "@/lib/payments/reconciliation";
 
 describe("Dodo entry checkout", () => {
   it("locks checkout to the server-calculated USD amount", () => {
@@ -47,5 +51,19 @@ describe("Dodo entry checkout", () => {
       "dispute.won",
       "dispute.lost",
     ]));
+  });
+
+  it("replaces abandoned checkout sessions only after Dodo's 24-hour validity window", () => {
+    const now = Date.parse("2026-08-29T12:00:00.000Z");
+
+    expect(dodoCheckoutSessionExpired(
+      new Date(now - DODO_CHECKOUT_SESSION_TTL_MS + 1).toISOString(),
+      now,
+    )).toBe(false);
+    expect(dodoCheckoutSessionExpired(
+      new Date(now - DODO_CHECKOUT_SESSION_TTL_MS).toISOString(),
+      now,
+    )).toBe(true);
+    expect(dodoCheckoutSessionExpired("not-a-date", now)).toBe(false);
   });
 });

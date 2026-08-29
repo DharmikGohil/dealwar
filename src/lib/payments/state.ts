@@ -100,3 +100,30 @@ export async function recordDodoPaymentFailed(
     return { transitioned: true };
   });
 }
+
+export async function recordDodoCheckoutExpired(storedPayment: StoredPayment) {
+  return db.$transaction(async (tx) => {
+    const transitioned = await tx.payment.updateMany({
+      where: { id: storedPayment.id, status: "PENDING" },
+      data: { status: "FAILED" },
+    });
+    if (transitioned.count === 0) return { transitioned: false };
+
+    await tx.deal.updateMany({
+      where: { id: storedPayment.dealId, status: "PENDING_PAYMENT" },
+      data: { status: "CANCELLED" },
+    });
+    await tx.auditLog.create({
+      data: {
+        action: "payment.checkout_expired",
+        targetType: "Deal",
+        targetId: storedPayment.dealId,
+        metadata: {
+          provider: paymentProvider,
+          providerSessionId: storedPayment.providerSessionId,
+        },
+      },
+    });
+    return { transitioned: true };
+  });
+}

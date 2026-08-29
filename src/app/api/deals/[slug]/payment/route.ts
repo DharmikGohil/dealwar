@@ -75,6 +75,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ slu
       if (reconciled.status === "succeeded" || reconciled.status === "processing") {
         return NextResponse.json(reconciled);
       }
+      if (["failed", "cancelled", "expired"].includes(reconciled.status)) {
+        reusable = undefined;
+      }
     }
 
     let createdNew = false;

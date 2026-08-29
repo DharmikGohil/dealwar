@@ -32,7 +32,9 @@ export function PaymentControl({
   const router = useRouter();
   const reconciled = useRef(false);
   const refunded = paymentStatus === "REFUNDED";
-  const paymentClosed = refunded || ["REJECTED", "CANCELLED", "ENDED"].includes(dealStatus);
+  const partiallyRefunded = paymentStatus === "PARTIALLY_REFUNDED";
+  const disputed = paymentStatus === "DISPUTED";
+  const paymentClosed = refunded || partiallyRefunded || disputed || ["PAUSED", "REJECTED", "ENDED"].includes(dealStatus);
   const [busy, setBusy] = useState(returnState === "return" && !paid && !paymentClosed);
   const [message, setMessage] = useState<string | null>(
     returnState === "cancelled" ? "Checkout was cancelled. No completed charge was recorded." : null,
@@ -97,15 +99,15 @@ export function PaymentControl({
       <div className="payment-control-mark"><LockKeyhole size={24} /></div>
       <div className="payment-control-copy">
         <span className="eyebrow">Secure payment / Dodo Payments</span>
-        <h2>{paid ? "Entry fee confirmed" : refunded ? "Entry fee refunded" : paymentClosed ? "Entry closed" : paymentStatus === "PENDING" ? "Finish your entry" : "Restart checkout"}</h2>
-        <p>{paid ? "Your company is in the moderation queue. A second charge cannot be created." : refunded ? "Dodo Payments returned the entry fee. This rejected entry cannot be charged again." : paymentClosed ? "This entry is closed and cannot start another checkout." : "Complete the one-time entry payment to send this offer to human review."}</p>
+        <h2>{paid ? "Entry fee confirmed" : refunded ? "Entry fee refunded" : partiallyRefunded ? "Entry fee partially refunded" : disputed ? "Payment under review" : paymentClosed ? "Entry closed" : paymentStatus === "PENDING" ? "Finish your entry" : "Restart checkout"}</h2>
+        <p>{paid ? "Your company is in the moderation queue. A second charge cannot be created." : refunded ? "Dodo Payments returned the entry fee. This rejected entry cannot be charged again." : partiallyRefunded ? "Part of this payment was refunded. The entry is paused while support resolves its status." : disputed ? "This payment is in dispute. The entry stays paused until Dodo reports the outcome." : paymentClosed ? "This entry is closed and cannot start another checkout." : "Complete the one-time entry payment to send this offer to human review."}</p>
         {message && <p className="payment-message">{message}</p>}
       </div>
       <div className="payment-control-action">
         {paid ? (
           receiptUrl ? <a className="button button-secondary" href={receiptUrl} target="_blank" rel="noreferrer">View receipt <ExternalLink size={15} /></a> : <strong>PAID</strong>
         ) : paymentClosed ? (
-          <strong>{refunded ? "REFUNDED" : "CLOSED"}</strong>
+          <strong>{refunded ? "REFUNDED" : partiallyRefunded ? "PARTIAL REFUND" : disputed ? "IN DISPUTE" : "CLOSED"}</strong>
         ) : (
           <Button type="button" variant="dark" onClick={startCheckout} disabled={busy}>
             {busy ? <><LoaderCircle className="spin" size={16} /> Checking payment</> : <><RotateCcw size={16} /> {paymentStatus === "PENDING" ? "Continue to payment" : "Try payment again"}</>}
