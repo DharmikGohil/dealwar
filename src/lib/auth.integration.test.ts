@@ -20,7 +20,7 @@ describe("email/password authentication", () => {
         email,
         name: "Authentication Test",
         password: "DealWar-Integration!2026",
-        callbackURL: "/dashboard",
+        callbackURL: "/my-deals",
       },
       headers: new Headers({ origin: "http://localhost:3000" }),
     });
@@ -43,7 +43,7 @@ describe("email/password authentication", () => {
           email: adminEmail,
           name: "Admin Authentication Test",
           password: "DealWar-Admin-Integration!2026",
-          callbackURL: "/dashboard",
+          callbackURL: "/my-deals",
         },
         headers: new Headers({ origin: "http://localhost:3000" }),
       });
@@ -74,18 +74,20 @@ describe("email/password authentication", () => {
   });
 
   it("uses the same public response without creating a token for an unknown email", async () => {
-    const before = await db.verification.count({
+    const before = new Set((await db.verification.findMany({
       where: { identifier: { startsWith: "reset-password:" } },
-    });
+      select: { id: true },
+    })).map(({ id }) => id));
     const result = await auth.api.requestPasswordReset({
       body: { email: missingEmail, redirectTo: "/reset-password" },
       headers: new Headers({ origin: "http://localhost:3000" }),
     });
-    const after = await db.verification.count({
+    const after = await db.verification.findMany({
       where: { identifier: { startsWith: "reset-password:" } },
+      select: { id: true },
     });
 
     expect(result.status).toBe(true);
-    expect(after).toBe(before);
+    expect(after.filter(({ id }) => !before.has(id))).toEqual([]);
   });
 });

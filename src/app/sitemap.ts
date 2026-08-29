@@ -12,7 +12,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     take: 5000,
   });
   const base = env.NEXT_PUBLIC_APP_URL;
-  const staticPages = ["", "/rules", "/about", "/privacy", "/terms", "/contact"];
+  const staticPages = ["", "/brands", "/rules", "/about", "/privacy", "/terms", "/contact"];
   return [
     ...staticPages.map((path) => ({ url: `${base}${path}`, lastModified: new Date(), changeFrequency: path === "" ? "hourly" as const : "monthly" as const, priority: path === "" ? 1 : .5 })),
     ...deals.map((deal) => ({ url: `${base}/deals/${deal.slug}`, lastModified: deal.updatedAt, changeFrequency: "daily" as const, priority: .8 })),

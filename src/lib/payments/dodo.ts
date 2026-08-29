@@ -58,8 +58,8 @@ export function buildEntryCheckoutPayload(input: EntryCheckoutInput): CheckoutSe
       dealwar_user_id: input.userId,
       dealwar_expected_amount_cents: String(input.amountCents),
     },
-    return_url: `${env.NEXT_PUBLIC_APP_URL}/dashboard/deals/${input.dealId}?payment=return`,
-    cancel_url: `${env.NEXT_PUBLIC_APP_URL}/dashboard/deals/${input.dealId}?payment=cancelled`,
+    return_url: `${env.NEXT_PUBLIC_APP_URL}/brand/entries/${input.dealId}?payment=return`,
+    cancel_url: `${env.NEXT_PUBLIC_APP_URL}/brand/entries/${input.dealId}?payment=cancelled`,
     short_link: false,
     show_saved_payment_methods: false,
   };

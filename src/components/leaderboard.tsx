@@ -18,8 +18,8 @@ export function Leaderboard({ deals }: { deals: PublicDeal[] }) {
         <span className="eyebrow">Round preparing</span>
         <h3>The board opens when the first verified pools are loaded.</h3>
         <p>No fake activity and no house listings. Every live offer is backed by unique claim inventory.</p>
-        <Link href="/join" className="text-link">
-          Submit the opening deal <ArrowRight size={17} />
+        <Link href="/brands" className="text-link">
+          Enter your brand <ArrowRight size={17} />
         </Link>
       </div>
     );

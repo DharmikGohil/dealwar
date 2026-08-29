@@ -24,15 +24,15 @@ export async function getCurrentUser() {
   return user;
 }
 
-export async function requireUser() {
+export async function requireUser(signInPath = "/sign-in") {
   const user = await getCurrentUser();
-  if (!user) redirect("/sign-in");
+  if (!user) redirect(signInPath);
   return user;
 }
 
-export async function requireRole(roles: GlobalRole[]) {
-  const user = await requireUser();
-  if (!user.emailVerified) redirect("/dashboard");
-  if (!roles.includes(user.role)) redirect("/dashboard");
+export async function requireRole(roles: GlobalRole[], signInPath = "/sign-in") {
+  const user = await requireUser(signInPath);
+  if (!user.emailVerified) redirect("/my-deals");
+  if (!roles.includes(user.role)) redirect("/my-deals");
   return user;
 }

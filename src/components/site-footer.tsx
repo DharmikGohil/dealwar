@@ -9,6 +9,8 @@ export function SiteFooter() {
         <p>Companies compete. Customers collect.</p>
       </div>
       <nav aria-label="Footer navigation">
+        <Link href="/#board">Live deals</Link>
+        <Link href="/brands">For brands</Link>
         <Link href="/rules">Rules</Link>
         <Link href="/paid-entry-disclosure">Paid entry disclosure</Link>
         <Link href="/acceptable-use">Acceptable use</Link>

@@ -6,7 +6,7 @@ import { getDealBySlug } from "@/lib/deals";
 import { formatMoney, initials, timeLeft } from "@/lib/format";
 import { getCurrentUser } from "@/lib/session";
 
-type PageProps = { params: Promise<{ slug: string }> };
+type PageProps = { params: Promise<{ slug: string }>; searchParams: Promise<{ claim?: string }> };
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
@@ -18,9 +18,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export default async function DealPage({ params }: PageProps) {
+export default async function DealPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
-  const [deal, user] = await Promise.all([getDealBySlug(slug), getCurrentUser()]);
+  const [{ claim }, deal, user] = await Promise.all([searchParams, getDealBySlug(slug), getCurrentUser()]);
   if (!deal || !["LIVE", "ENDED"].includes(deal.status)) notFound();
   const available = deal.status === "LIVE" && deal.availableCount > 0 && (!deal.endsAt || deal.endsAt > new Date());
   return (
@@ -60,7 +60,7 @@ export default async function DealPage({ params }: PageProps) {
           <small>of {deal.inventoryCount} codes remain</small>
           <div><i style={{ width: `${Math.round((deal.availableCount / deal.inventoryCount) * 100)}%` }} /></div>
         </div>
-        <ClaimPanel slug={deal.slug} signedIn={Boolean(user)} available={available} />
+        <ClaimPanel slug={deal.slug} signedIn={Boolean(user)} available={available} autoClaim={claim === "1"} />
       </aside>
     </section>
   );

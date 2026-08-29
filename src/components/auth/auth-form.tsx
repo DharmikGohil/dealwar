@@ -7,7 +7,7 @@ import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
-export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
+export function AuthForm({ mode, nextPath = "/my-deals" }: { mode: "sign-in" | "sign-up"; nextPath?: string }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -23,8 +23,8 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
     const name = String(form.get("name") || "").trim();
     try {
       const result = mode === "sign-up"
-        ? await authClient.signUp.email({ email, password, name, callbackURL: "/dashboard" })
-        : await authClient.signIn.email({ email, password, callbackURL: "/dashboard" });
+        ? await authClient.signUp.email({ email, password, name, callbackURL: nextPath })
+        : await authClient.signIn.email({ email, password, callbackURL: nextPath });
       if (result.error) {
         setError(result.error.message || "Authentication failed.");
         return;
@@ -33,7 +33,7 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
         setVerificationEmail(email);
         return;
       }
-      router.push("/dashboard");
+      router.push(nextPath);
       router.refresh();
     } catch {
       setError("We could not reach the authentication service.");
@@ -47,7 +47,7 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
       <div className="auth-success" role="status">
         <MailCheck size={28} aria-hidden="true" />
         <strong>Check your inbox.</strong>
-        <p>We sent a secure verification link to {verificationEmail}. Open it to activate your account and enter the control room.</p>
+        <p>We sent a secure verification link to {verificationEmail}. Open it to activate your account and continue where you left off.</p>
       </div>
     );
   }
@@ -79,7 +79,7 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
       {error && <div className="form-error" role="alert">{error}</div>}
       <Button type="submit" variant="dark" disabled={pending}>
         {pending ? <LoaderCircle className="spin" size={17} /> : null}
-        {mode === "sign-up" ? "Create account" : "Enter control room"}
+        {mode === "sign-up" ? "Create account" : "Continue"}
         {!pending && <ArrowRight size={17} />}
       </Button>
     </form>

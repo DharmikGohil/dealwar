@@ -17,14 +17,15 @@ export default async function DashboardDealPage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ payment?: string }>;
 }) {
-  const user = await requireUser();
   const { id } = await params;
+  const returnPath = `/brand/entries/${encodeURIComponent(id)}`;
+  const user = await requireUser(`/sign-in?intent=brand&next=${encodeURIComponent(returnPath)}`);
   const deal = await db.deal.findUnique({
     where: { id },
     include: { product: { include: { organization: { include: { memberships: true } } } }, round: true, payments: true, moderationCases: { orderBy: { createdAt: "desc" } } },
   });
   if (!deal) notFound();
-  if (!deal.product.organization.memberships.some((membership) => membership.userId === user.id) && !["ADMIN", "MODERATOR"].includes(user.role)) redirect("/dashboard");
+  if (!deal.product.organization.memberships.some((membership) => membership.userId === user.id) && !["ADMIN", "MODERATOR"].includes(user.role)) redirect("/brand");
   const latestPayment = [...deal.payments].sort((left, right) => right.createdAt.getTime() - left.createdAt.getTime())[0];
   const successfulPayment = deal.payments.find((payment) => payment.status === "SUCCEEDED");
   const paid = Boolean(successfulPayment);
@@ -40,7 +41,7 @@ export default async function DashboardDealPage({
   const returnState = paymentReturn === "return" || paymentReturn === "cancelled" ? paymentReturn : undefined;
   return (
     <section className="deal-status-page">
-        <Link href="/dashboard/companies" className="back-link"><ArrowLeft size={16} /> Company entries</Link>
+        <Link href="/brand/entries" className="back-link"><ArrowLeft size={16} /> All entries</Link>
         <header className="deal-status-header"><div><span className="eyebrow">{deal.round.name} / entry status</span><h1>{deal.product.name}</h1><p>{deal.headline}</p></div><div className={`big-status status-${deal.status.toLowerCase()}`}><span>Current state</span><strong>{deal.status.replaceAll("_", " ")}</strong></div></header>
         <div className="gate-grid">
           <div className={paid ? "gate done" : "gate"}><CircleDollarSign /><span>Entry payment</span><strong>{paymentLabel}</strong><small>{formatMoney(deal.entryFeeCents)}</small></div>

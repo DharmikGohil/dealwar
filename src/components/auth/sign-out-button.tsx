@@ -6,5 +6,5 @@ import { authClient } from "@/lib/auth-client";
 
 export function SignOutButton() {
   const router = useRouter();
-  return <button className="dashboard-signout" onClick={async () => { await authClient.signOut(); router.push("/"); router.refresh(); }}><LogOut size={15} /> Sign out</button>;
+  return <button className="dashboard-signout account-signout" onClick={async () => { await authClient.signOut(); router.push("/"); router.refresh(); }}><LogOut size={15} /> Sign out</button>;
 }

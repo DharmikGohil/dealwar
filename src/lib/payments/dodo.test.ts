@@ -27,8 +27,8 @@ describe("Dodo entry checkout", () => {
       dealwar_user_id: "user_123",
       dealwar_expected_amount_cents: "3750",
     });
-    expect(checkout.return_url).toContain("/dashboard/deals/deal_123?payment=return");
-    expect(checkout.cancel_url).toContain("/dashboard/deals/deal_123?payment=cancelled");
+    expect(checkout.return_url).toContain("/brand/entries/deal_123?payment=return");
+    expect(checkout.cancel_url).toContain("/brand/entries/deal_123?payment=cancelled");
   });
 
   it("subscribes to every payment, refund, and dispute state DealWar handles", () => {

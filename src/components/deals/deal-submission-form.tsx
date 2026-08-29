@@ -86,7 +86,7 @@ export function DealSubmissionForm({ roundId, roundName, minimumFeeCents }: Prop
         return;
       }
       if (data.checkoutUrl) window.location.href = data.checkoutUrl;
-      else router.push(`/dashboard/deals/${data.dealId}`);
+      else router.push(`/brand/entries/${data.dealId}`);
     } catch {
       setError("DealWar could not submit your entry. Your codes were not stored.");
     } finally {

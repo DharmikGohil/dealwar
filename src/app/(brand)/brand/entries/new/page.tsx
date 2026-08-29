@@ -1,4 +1,3 @@
-import { redirect } from "next/navigation";
 import { DealSubmissionForm } from "@/components/deals/deal-submission-form";
 import { getLiveRound } from "@/lib/deals";
 import { env, paymentsActive } from "@/lib/env";
@@ -6,7 +5,7 @@ import { env, paymentsActive } from "@/lib/env";
 export const metadata = { title: "Enter your company" };
 export const dynamic = "force-dynamic";
 
-export default async function JoinPage() {
+export default async function NewBrandEntryPage() {
   if (!paymentsActive) {
     return (
       <section className="join-page">
@@ -24,7 +23,14 @@ export default async function JoinPage() {
     );
   }
   const round = await getLiveRound();
-  if (!round) redirect("/?entry=closed");
+  if (!round) {
+    return (
+      <section className="join-page">
+        <header className="join-heading"><span className="eyebrow">Brand Arena / new entry</span><h1>Next round<br />coming soon.</h1><p>Your Brand Arena remains available while the next competition is scheduled.</p></header>
+        <div className="empty-board"><span className="eyebrow">Entries temporarily closed</span><h3>No round is accepting entries right now.</h3><p>Nothing is charged or submitted until a live or scheduled round opens.</p></div>
+      </section>
+    );
+  }
   return (
     <section className="join-page">
         <header className="join-heading">

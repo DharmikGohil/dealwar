@@ -47,7 +47,7 @@ export async function POST(
         subject: `Your ${allocated.productName} credit is secured`,
         preview: "Your DealWar claim is ready in your secure account.",
         heading: "Your code is secured.",
-        body: `${allocated.headline}\n\nCode: ${revealedCode}\n\nThis code also remains available in My Claims. Company terms apply.`,
+        body: `${allocated.headline}\n\nCode: ${revealedCode}\n\nThis code also remains available in My Deals. Company terms apply.`,
         actionLabel: `Redeem at ${allocated.productName}`,
         actionUrl: allocated.redemptionUrl,
       });

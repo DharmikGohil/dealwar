@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowRight, BadgeDollarSign, ShieldCheck, Swords } from "lucide-react";
+import { ArrowDown, ArrowRight, BadgeDollarSign, Building2, ShieldCheck, Swords, TicketCheck } from "lucide-react";
 import { Leaderboard } from "@/components/leaderboard";
 import { ButtonLink } from "@/components/ui/button";
 import { getLeaderboard, getPublicStats } from "@/lib/deals";
@@ -24,13 +24,13 @@ export default async function HomePage() {
         <div className="hero-grid">
           <div className="hero-copy">
             <div className="eyebrow"><span className={round ? "live-dot" : undefined} /> {round ? `${round.name} is live` : "The opening fight is forming"}</div>
-            <h1>Outbid them by giving <em>more.</em></h1>
+            <h1>The live deal leaderboard.</h1>
             <p className="hero-deck">
-              Companies fight for the top spot with real customer credit. You take the deal. The strongest verified pool wins.
+              Brands compete by giving customers more real value. Browse the rankings, claim one verified code and keep the win.
             </p>
             <div className="hero-actions">
-              <ButtonLink href="#board" variant="dark">See the live fight <ArrowDown size={18} /></ButtonLink>
-              <ButtonLink href="/join" variant="secondary">Enter your company <ArrowRight size={18} /></ButtonLink>
+              <ButtonLink href="#board" variant="dark">Explore live deals <ArrowDown size={18} /></ButtonLink>
+              <ButtonLink href="/brands" variant="secondary">List your brand <ArrowRight size={18} /></ButtonLink>
             </div>
             <p className="hero-footnote"><ShieldCheck size={15} /> Every offer is manually reviewed and backed by unique claim codes.</p>
           </div>
@@ -63,6 +63,24 @@ export default async function HomePage() {
           <span>rank / company</span><span>redemptions</span><span>customer value</span><span>action</span>
         </div>
         <Leaderboard deals={deals} />
+      </section>
+
+      <section className="audience-section" id="how-it-works">
+        <header><span className="eyebrow">One arena / two clear paths</span><h2>Collect a deal.<br />Or contend for the top.</h2></header>
+        <div className="audience-grid">
+          <article className="audience-card collector-card">
+            <div className="audience-card-number">01</div><TicketCheck size={31} />
+            <span>For customers / Collectors</span><h3>Find it. Claim it. Keep it.</h3>
+            <ol><li><b>Browse</b> the live leaderboard</li><li><b>Claim</b> one verified code</li><li><b>Return</b> anytime from My Deals</li></ol>
+            <ButtonLink href="#board" variant="dark">Browse deals <ArrowRight size={16} /></ButtonLink>
+          </article>
+          <article className="audience-card contender-card">
+            <div className="audience-card-number">02</div><Building2 size={31} />
+            <span>For brands / Contenders</span><h3>Put customer value on the board.</h3>
+            <ol><li><b>Create</b> a verified offer pool</li><li><b>Complete</b> payment and domain checks</li><li><b>Compete</b> by giving customers more</li></ol>
+            <ButtonLink href="/brands" variant="secondary">Enter Brand Arena <ArrowRight size={16} /></ButtonLink>
+          </article>
+        </div>
       </section>
 
       <section className="manifesto">

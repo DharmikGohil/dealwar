@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowUpRight, Check, Copy, LoaderCircle, LockKeyhole } from "lucide-react";
 import { Button, ButtonLink } from "@/components/ui/button";
 
@@ -8,17 +8,20 @@ export function ClaimPanel({
   slug,
   signedIn,
   available,
+  autoClaim = false,
 }: {
   slug: string;
   signedIn: boolean;
   available: boolean;
+  autoClaim?: boolean;
 }) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [claim, setClaim] = useState<{ code: string; redemptionUrl: string } | null>(null);
   const [copied, setCopied] = useState(false);
+  const resumed = useRef(false);
 
-  async function executeClaim() {
+  const executeClaim = useCallback(async () => {
     setPending(true);
     setError(null);
     try {
@@ -37,7 +40,13 @@ export function ClaimPanel({
     } finally {
       setPending(false);
     }
-  }
+  }, [slug]);
+
+  useEffect(() => {
+    if (!signedIn || !available || !autoClaim || resumed.current) return;
+    resumed.current = true;
+    void executeClaim();
+  }, [autoClaim, available, executeClaim, signedIn]);
 
   if (!signedIn) {
     return (
@@ -45,7 +54,7 @@ export function ClaimPanel({
         <LockKeyhole size={28} />
         <h2>One quick identity check.</h2>
         <p>Sign in with a verified email. It keeps one person from draining the pool.</p>
-        <ButtonLink href={`/sign-in?next=/deals/${slug}`} variant="dark">Sign in to claim</ButtonLink>
+        <ButtonLink href={`/sign-in?intent=claim&next=${encodeURIComponent(`/deals/${slug}?claim=1`)}`} variant="dark">Sign in to claim</ButtonLink>
       </div>
     );
   }
@@ -65,6 +74,7 @@ export function ClaimPanel({
         <a className="button button-dark" href={claim.redemptionUrl} target="_blank" rel="noopener noreferrer sponsored">
           Redeem with company <ArrowUpRight size={17} />
         </a>
+        <ButtonLink href="/my-deals" variant="secondary">View My Deals</ButtonLink>
         <p className="microcopy">Store this code now. It also remains attached to your DealWar account.</p>
       </div>
     );
@@ -72,8 +82,8 @@ export function ClaimPanel({
 
   return (
     <div className="claim-panel">
-      <span className="eyebrow">One code per person</span>
-      <h2>{available ? "Take the deal." : "The pool is empty."}</h2>
+      <span className="eyebrow">{autoClaim && pending ? "Resuming your claim" : "One code per person"}</span>
+      <h2>{available ? autoClaim && pending ? "Securing your code." : "Take the deal." : "The pool is empty."}</h2>
       <p>DealWar allocates a unique code in a locked transaction. Companies never receive your password or raw network data.</p>
       {error && <div className="form-error" role="alert">{error}</div>}
       <Button type="button" variant="dark" onClick={executeClaim} disabled={pending || !available}>
