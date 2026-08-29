@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 
 type ControlRoomUser = {
@@ -7,24 +10,33 @@ type ControlRoomUser = {
   role: "USER" | "MODERATOR" | "ADMIN";
 };
 
-type ActiveSection = "overview" | "companies" | "claims" | "new-entry" | "moderation";
-
 type ControlRoomShellProps = {
   user: ControlRoomUser;
-  active: ActiveSection;
   children: React.ReactNode;
 };
 
-export function ControlRoomShell({ user, active, children }: ControlRoomShellProps) {
+export function ControlRoomShell({ user, children }: ControlRoomShellProps) {
+  const pathname = usePathname();
   const navigation = [
     { key: "overview" as const, href: "/dashboard", label: "Overview" },
-    { key: "companies" as const, href: "/dashboard#company-entries", label: "Company entries" },
+    { key: "companies" as const, href: "/dashboard/companies", label: "Company entries" },
     { key: "claims" as const, href: "/dashboard/claims", label: "My claims" },
     { key: "new-entry" as const, href: "/join", label: "New company entry" },
     ...(["ADMIN", "MODERATOR"].includes(user.role)
       ? [{ key: "moderation" as const, href: "/admin", label: "Moderation" }]
       : []),
   ];
+  const active = pathname === "/dashboard"
+    ? "overview"
+    : pathname === "/dashboard/companies" || pathname.startsWith("/dashboard/deals/")
+      ? "companies"
+      : pathname === "/dashboard/claims"
+        ? "claims"
+        : pathname === "/join"
+          ? "new-entry"
+          : pathname === "/admin"
+            ? "moderation"
+            : undefined;
 
   return (
     <section className="control-room-shell">

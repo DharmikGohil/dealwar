@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { ArrowUpRight, TicketCheck } from "lucide-react";
 import { ClaimCode } from "@/components/dashboard/claim-code";
-import { ControlRoomShell } from "@/components/dashboard/control-room-shell";
 import { db } from "@/lib/db";
 import { formatMoney } from "@/lib/format";
 import { decryptCoupon } from "@/lib/security";
@@ -18,8 +17,7 @@ export default async function ClaimsPage() {
     orderBy: { createdAt: "desc" },
   });
   return (
-    <ControlRoomShell user={user} active="claims">
-      <section className="claims-page">
+    <section className="claims-page">
         <header>
           <div><span className="eyebrow">Your secured credits</span><h1>My claims.</h1></div>
           <div className="claims-count"><TicketCheck /><strong>{claims.length}</strong><span>codes claimed</span></div>
@@ -46,7 +44,6 @@ export default async function ClaimsPage() {
           <div className="dashboard-empty"><TicketCheck /><h2>The vault is empty.</h2><p>Claim a live offer and its code will stay here.</p><Link className="text-link" href="/#board">Browse the board</Link></div>
         )}
         <p className="vault-security-note">Codes are decrypted only while rendering this authenticated, uncached page. DealWar never includes them in public pages or analytics.</p>
-      </section>
-    </ControlRoomShell>
+    </section>
   );
 }

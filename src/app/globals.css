@@ -368,7 +368,9 @@ button, a { -webkit-tap-highlight-color: transparent; }
 
 /* Dashboard and operations */
 .control-room-shell { min-height: calc(100dvh - 78px); display: grid; grid-template-columns: 280px minmax(0, 1fr); border-bottom: 2px solid var(--ink); }
-.control-room-workspace { min-width: 0; }
+.control-room-workspace { min-width: 0; min-height: calc(100dvh - 78px); }
+.control-room-loading { min-height: calc(100dvh - 78px); display: grid; place-items: center; align-content: center; gap: 18px; text-transform: uppercase; }
+.control-room-loading span { width: 46px; height: 46px; border: 7px solid var(--ink); border-top-color: var(--signal); animation: spin .7s linear infinite; }
 .dashboard-sidebar { position: sticky; z-index: 10; top: 78px; align-self: start; height: calc(100dvh - 78px); min-height: 0; display: flex; flex-direction: column; overflow-y: auto; overscroll-behavior: contain; padding: 38px 25px; border-right: 2px solid var(--ink); background: var(--ink); color: var(--paper-bright); scrollbar-width: thin; scrollbar-color: var(--signal) var(--ink); }
 .dashboard-sidebar h1 { margin: 15px 0 0; font-family: var(--display); font-size: 38px; line-height: .9; text-transform: uppercase; }
 .dashboard-sidebar p { margin: 8px 0; color: #aaa499; font-size: 12px; word-break: break-all; }
@@ -381,6 +383,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .dashboard-content { padding: clamp(35px, 6vw, 80px); min-width: 0; }
 .dashboard-content > header { display: flex; align-items: end; justify-content: space-between; gap: 24px; }
 .dashboard-content h2 { margin: 14px 0 0; font-family: var(--display); font-size: clamp(58px, 8vw, 106px); line-height: .8; text-transform: uppercase; }
+.company-entries-page .dashboard-section { margin-top: 60px; }
 .dashboard-stats { display: grid; grid-template-columns: repeat(3, 1fr); margin: 50px 0; border: 2px solid var(--ink); background: var(--paper-bright); box-shadow: 6px 6px 0 var(--ink); }
 .dashboard-stats > div { padding: 22px; border-right: 2px solid var(--ink); }
 .dashboard-stats > div:last-child { border: 0; }
