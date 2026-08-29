@@ -286,8 +286,106 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .error-poster h1 { margin: 35px 0 6px; font-family: var(--display); font-size: clamp(38px, 5vw, 68px); text-transform: uppercase; }
 .error-poster p { margin: 0 0 25px; color: #39372f; }
 .error-poster a, .error-poster button { display: inline-flex; align-items: center; gap: 7px; min-height: 45px; padding: 0 15px; border: 2px solid var(--ink); background: var(--ink); color: var(--paper-bright); font-weight: 900; cursor: pointer; }
-.route-loading { min-height: 420px; display: grid; place-items: center; align-content: center; gap: 20px; text-transform: uppercase; }
-.route-loading span { width: 55px; height: 55px; border: 8px solid var(--ink); border-top-color: var(--signal); animation: spin .7s linear infinite; }
+.sr-only { position: absolute !important; width: 1px !important; height: 1px !important; padding: 0 !important; margin: -1px !important; overflow: hidden !important; clip: rect(0, 0, 0, 0) !important; white-space: nowrap !important; border: 0 !important; }
+.skeleton-page { min-width: 0; overflow: hidden; }
+.dw-skeleton-block { position: relative; display: block; overflow: hidden; border: 2px solid var(--ink); background: #ded8ca; }
+.dw-skeleton-block::after { content: ""; position: absolute; inset: 0 auto 0 -32%; width: 25%; background: var(--signal); opacity: .65; animation: skeleton-scan 1.55s steps(7, end) infinite; }
+.skeleton-invert { border-color: rgba(255,255,255,.85); background: rgba(255,255,255,.18); }
+.skeleton-invert::after { background: var(--acid); opacity: .9; }
+.skeleton-signal { background: #ffb09a; }
+.skeleton-kicker { width: min(220px, 52%); height: 14px; }
+.skeleton-display { height: clamp(68px, 8vw, 118px); margin-top: 13px; }
+.skeleton-display-wide { width: min(820px, 96%); }
+.skeleton-display-mid { width: min(690px, 80%); }
+.skeleton-copy-line { width: min(680px, 92%); height: 23px; margin-top: 28px; }
+.skeleton-copy-line-short { width: min(500px, 68%); margin-top: 10px; }
+.skeleton-button-row { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 34px; }
+.skeleton-button { width: 210px; height: 50px; background: var(--ink); box-shadow: 4px 4px 0 var(--signal); }
+.skeleton-button::after { background: var(--acid); }
+.skeleton-button-light { width: 175px; background: var(--paper-bright); box-shadow: 4px 4px 0 var(--ink); }
+.skeleton-line { height: 13px; border-width: 1px; }
+.skeleton-line-strong { width: min(260px, 82%); height: 21px; }
+.skeleton-line-short { width: min(190px, 62%); margin-top: 8px; }
+.skeleton-status:empty { display: none; }
+.skeleton-slow-note { position: fixed; z-index: 80; left: 50%; bottom: 22px; transform: translateX(-50%); display: flex; align-items: center; gap: 14px; padding: 10px 12px 10px 16px; border: 2px solid var(--ink); background: var(--acid); box-shadow: 5px 5px 0 var(--ink); font-size: 11px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+.skeleton-slow-note button { padding: 7px 11px; border: 2px solid var(--ink); background: var(--paper-bright); font-size: 10px; font-weight: 900; text-transform: uppercase; cursor: pointer; }
+@keyframes skeleton-scan { to { left: 118%; } }
+
+.skeleton-public-hero { min-height: 650px; display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(360px, .8fr); gap: clamp(36px, 6vw, 100px); align-items: center; padding: clamp(60px, 8vw, 118px) clamp(18px, 6vw, 100px); border-bottom: 2px solid var(--ink); }
+.skeleton-hero-copy { min-width: 0; }
+.skeleton-score-poster { min-height: 450px; display: flex; flex-direction: column; justify-content: space-between; padding: 28px; border: 3px solid var(--ink); background: var(--blue); box-shadow: 14px 14px 0 var(--ink); transform: rotate(1deg); }
+.skeleton-poster-stamp { width: 110px; height: 26px; align-self: flex-end; }
+.skeleton-poster-number { width: 62%; height: 100px; margin-top: 14px; }
+.skeleton-poster-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding-top: 18px; border-top: 2px solid var(--paper-bright); }
+.skeleton-poster-grid > span { height: 58px; }
+.skeleton-public-board { padding: clamp(62px, 8vw, 110px) clamp(18px, 5vw, 76px); }
+.skeleton-section-head { display: flex; align-items: end; justify-content: space-between; gap: 32px; margin-bottom: 38px; }
+.skeleton-section-title { width: min(480px, 60vw); height: 74px; margin-top: 14px; }
+.skeleton-rule-card { width: min(410px, 36vw); height: 82px; background: var(--acid); box-shadow: 5px 5px 0 var(--ink); }
+.skeleton-board-rows { border: 2px solid var(--ink); background: var(--paper-bright); box-shadow: 8px 8px 0 var(--ink); }
+.skeleton-board-row { min-height: 116px; display: grid; grid-template-columns: 54px 58px minmax(180px, 1fr) 135px 135px 88px; gap: 18px; align-items: center; padding: 18px 20px; border-bottom: 2px solid var(--ink); }
+.skeleton-board-row:last-child { border-bottom: 0; }
+.skeleton-rank { width: 43px; height: 42px; background: var(--signal); }
+.skeleton-avatar { width: 58px; height: 58px; background: var(--acid); box-shadow: 3px 3px 0 var(--ink); }
+.skeleton-row-copy { min-width: 0; }
+.skeleton-meter { width: 100%; height: 12px; }
+.skeleton-value { width: 105px; height: 48px; }
+.skeleton-action { width: 88px; height: 44px; background: var(--signal); }
+
+.skeleton-brand-landing > section { min-height: 720px; display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(340px, .65fr); gap: clamp(40px, 7vw, 110px); align-items: center; padding: clamp(65px, 9vw, 130px) clamp(18px, 6vw, 100px); }
+.skeleton-brand-landing > section > div { min-width: 0; }
+.skeleton-round-card { min-height: 430px; display: flex; flex-direction: column; padding: 30px; border: 3px solid var(--ink); background: var(--acid); box-shadow: 10px 10px 0 var(--ink); }
+.skeleton-round-title { width: 80%; height: 115px; margin-top: 25px; }
+.skeleton-round-list { width: 100%; height: 130px; margin-top: auto; background: var(--paper-bright); }
+
+.skeleton-workspace { min-height: calc(100dvh - 78px); }
+.skeleton-workspace-head { display: flex; align-items: end; justify-content: space-between; gap: 24px; }
+.skeleton-workspace-title { width: min(600px, 65vw); height: clamp(62px, 8vw, 105px); margin-top: 14px; }
+.skeleton-workspace-intro { margin-top: 25px; }
+.skeleton-stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); margin: 50px 0; border: 2px solid var(--ink); background: var(--paper-bright); box-shadow: 6px 6px 0 var(--ink); }
+.skeleton-stat-grid > div { min-height: 122px; padding: 22px; border-right: 2px solid var(--ink); }
+.skeleton-stat-grid > div:last-child { border-right: 0; }
+.skeleton-stat-number { width: 82px; height: 51px; margin-top: 15px; }
+.skeleton-list-head { display: flex; justify-content: space-between; align-items: end; margin-bottom: 13px; }
+.skeleton-workspace .skeleton-board-row { min-height: 80px; grid-template-columns: 12px 52px minmax(180px, 1fr) 110px 110px 70px; padding-block: 14px; border-bottom-width: 1px; }
+.skeleton-workspace .skeleton-rank { width: 10px; height: 36px; background: #f2a900; }
+.skeleton-workspace .skeleton-avatar { width: 46px; height: 46px; }
+.skeleton-workspace .skeleton-action { width: 64px; height: 30px; }
+
+.skeleton-collector-head { display: flex; justify-content: space-between; align-items: end; gap: 30px; margin: 42px 0; }
+.skeleton-collector-title { width: min(650px, 62vw); height: clamp(70px, 10vw, 140px); margin-top: 14px; }
+.skeleton-count-card { min-width: 180px; padding: 18px; border: 2px solid var(--ink); background: var(--acid); box-shadow: 6px 6px 0 var(--ink); }
+.skeleton-vault-list { border-top: 3px solid var(--ink); }
+.skeleton-vault-row { min-height: 125px; display: grid; grid-template-columns: minmax(220px, 1fr) 130px minmax(240px, .85fr) 160px; align-items: center; border: 2px solid var(--ink); border-top: 0; background: var(--paper-bright); }
+.skeleton-vault-row > * { min-width: 0; margin: 0 20px; }
+.skeleton-vault-row > div { padding-left: 14px; border-left: 9px solid var(--blue); }
+.skeleton-code { height: 48px; background: var(--ink); }
+
+.skeleton-deal { min-height: 760px; display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(380px, .65fr); border-bottom: 2px solid var(--ink); }
+.skeleton-deal-main { min-width: 0; padding: clamp(48px, 7vw, 105px); border-right: 2px solid var(--ink); background: var(--paper-bright); }
+.skeleton-brand-lockup { display: flex; align-items: center; gap: 24px; margin-top: 45px; }
+.skeleton-brand-logo { width: 100px; height: 100px; flex: 0 0 auto; background: var(--acid); box-shadow: 7px 7px 0 var(--ink); }
+.skeleton-brand-lockup > div { flex: 1; }
+.skeleton-deal-title { width: min(520px, 82%); height: 82px; margin-top: 8px; }
+.skeleton-deal-headline { width: min(720px, 92%); height: 55px; margin-top: 48px; }
+.skeleton-fact-grid { display: grid; grid-template-columns: repeat(4, 1fr); margin-top: 58px; border: 2px solid var(--ink); }
+.skeleton-fact-grid > span { min-height: 130px; border: 0; border-right: 2px solid var(--ink); }
+.skeleton-fact-grid > span:last-child { border-right: 0; }
+.skeleton-deal-side { display: flex; flex-direction: column; gap: 26px; padding: clamp(38px, 5vw, 75px) clamp(22px, 4vw, 58px); background: var(--acid); }
+.skeleton-availability, .skeleton-claim-card { padding: 24px; border: 3px solid var(--ink); background: var(--paper-bright); box-shadow: 7px 7px 0 var(--ink); }
+.skeleton-availability .skeleton-poster-number { height: 80px; }
+.skeleton-availability .skeleton-meter { margin-top: 20px; }
+.skeleton-claim-card .skeleton-section-title { width: 86%; height: 50px; }
+.skeleton-claim-card .skeleton-copy-line { width: 100%; height: 60px; }
+.skeleton-claim-card .skeleton-button { width: 100%; margin-top: 25px; }
+
+.skeleton-operator-title { width: min(800px, 72vw); height: clamp(75px, 10vw, 135px); margin: 22px 0 50px; }
+.skeleton-operator-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 25px; }
+.skeleton-operator-grid article { min-height: 340px; padding: 25px; border: 2px solid var(--ink); background: var(--paper-bright); box-shadow: 6px 6px 0 var(--ink); }
+.skeleton-card-facts { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 30px; }
+.skeleton-card-facts > span { height: 58px; }
+.skeleton-operator-grid article > .skeleton-copy-line { height: 48px; margin-top: 24px; }
+.skeleton-operator-grid article > .skeleton-button { width: 145px; height: 42px; margin-top: 25px; }
 
 /* Authentication */
 .auth-page { min-height: calc(100vh - 78px); display: grid; grid-template-columns: minmax(340px, .85fr) minmax(480px, 1.15fr); border-bottom: 2px solid var(--ink); }
@@ -418,8 +516,6 @@ button, a { -webkit-tap-highlight-color: transparent; }
 /* Brand Arena, Collector vault and operations */
 .brand-arena-shell { min-height: calc(100dvh - 78px); display: grid; grid-template-columns: 280px minmax(0, 1fr); border-bottom: 2px solid var(--ink); }
 .brand-arena-workspace { min-width: 0; min-height: calc(100dvh - 78px); }
-.brand-arena-loading { min-height: calc(100dvh - 78px); display: grid; place-items: center; align-content: center; gap: 18px; text-transform: uppercase; }
-.brand-arena-loading span { width: 46px; height: 46px; border: 7px solid var(--ink); border-top-color: var(--signal); animation: spin .7s linear infinite; }
 .brand-sidebar { position: sticky; z-index: 10; top: 78px; align-self: start; height: calc(100dvh - 78px); min-height: 0; display: flex; flex-direction: column; overflow-y: auto; overscroll-behavior: contain; padding: 38px 25px; border-right: 2px solid var(--ink); background: var(--ink); color: var(--paper-bright); scrollbar-width: thin; scrollbar-color: var(--signal) var(--ink); }
 .brand-sidebar h1 { margin: 15px 0 0; font-family: var(--display); font-size: 38px; line-height: .9; text-transform: uppercase; }
 .brand-sidebar p { margin: 8px 0; color: #aaa499; font-size: 12px; word-break: break-all; }
@@ -627,6 +723,12 @@ button, a { -webkit-tap-highlight-color: transparent; }
   .brand-process > div { grid-template-columns: repeat(2, 1fr); }
   .brand-process article:nth-child(2) { border-right: 0; }
   .brand-process article:nth-child(-n+2) { border-bottom: 1px solid var(--paper-bright); }
+  .skeleton-public-hero, .skeleton-brand-landing > section { grid-template-columns: minmax(0, 1fr); }
+  .skeleton-score-poster, .skeleton-round-card { width: min(100%, 620px); }
+  .skeleton-deal { grid-template-columns: 1fr; }
+  .skeleton-deal-main { border-right: 0; border-bottom: 2px solid var(--ink); }
+  .skeleton-deal-side { display: grid; grid-template-columns: 1fr 1fr; }
+  .skeleton-operator-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 720px) {
@@ -638,6 +740,52 @@ button, a { -webkit-tap-highlight-color: transparent; }
   .account-menu summary span { display: none; }
   .account-menu summary { width: 42px; justify-content: center; padding: 0; }
   .header-actions .button { min-height: 40px; padding: 0 11px; font-size: 10px; box-shadow: 3px 3px 0 var(--signal); }
+  .skeleton-slow-note { width: calc(100% - 32px); justify-content: space-between; bottom: 16px; }
+  .skeleton-public-hero { min-height: 0; padding: 62px 18px; }
+  .skeleton-display { height: 55px; }
+  .skeleton-display-wide { width: 100%; }
+  .skeleton-display-mid { width: 82%; }
+  .skeleton-copy-line { width: 100%; height: 18px; }
+  .skeleton-copy-line-short { width: 76%; }
+  .skeleton-button-row { display: grid; }
+  .skeleton-button, .skeleton-button-light { width: 100%; }
+  .skeleton-score-poster { min-height: 320px; padding: 22px; box-shadow: 8px 8px 0 var(--ink); }
+  .skeleton-poster-number { height: 78px; }
+  .skeleton-public-board { padding-inline: 18px; }
+  .skeleton-section-head { align-items: stretch; flex-direction: column; }
+  .skeleton-section-title { width: 82%; height: 60px; }
+  .skeleton-rule-card { width: 100%; height: 76px; }
+  .skeleton-board-rows { margin-right: 5px; box-shadow: 5px 5px 0 var(--ink); }
+  .skeleton-board-row { min-height: 94px; grid-template-columns: 38px 46px minmax(0, 1fr); gap: 11px; padding: 16px 12px; }
+  .skeleton-rank { width: 33px; height: 34px; }
+  .skeleton-avatar { width: 46px; height: 46px; }
+  .skeleton-board-row > .skeleton-meter, .skeleton-board-row > .skeleton-value, .skeleton-board-row > .skeleton-action { display: none; }
+  .skeleton-brand-landing > section { min-height: 0; padding: 70px 18px; }
+  .skeleton-round-card { min-height: 360px; padding: 24px; box-shadow: 7px 7px 0 var(--ink); }
+  .skeleton-round-title { height: 90px; }
+  .skeleton-workspace-head, .skeleton-collector-head { align-items: stretch; flex-direction: column; }
+  .skeleton-workspace-title { width: 88%; height: 65px; }
+  .skeleton-workspace-head .skeleton-button { width: 155px; }
+  .skeleton-stat-grid > div { min-height: 98px; padding: 12px; }
+  .skeleton-stat-number { width: 58px; height: 38px; }
+  .skeleton-workspace .skeleton-board-row { grid-template-columns: 9px 46px minmax(0, 1fr); }
+  .skeleton-workspace .skeleton-board-row > .skeleton-avatar { display: block; }
+  .skeleton-collector-title { width: 100%; height: 78px; }
+  .skeleton-count-card { width: 180px; }
+  .skeleton-vault-row { grid-template-columns: 1fr; gap: 14px; padding: 18px; }
+  .skeleton-vault-row > * { margin: 0; }
+  .skeleton-vault-row > .skeleton-value, .skeleton-vault-row > .skeleton-code, .skeleton-vault-row > .skeleton-action { width: 100%; }
+  .skeleton-vault-row > .skeleton-value { height: 35px; }
+  .skeleton-deal-main { padding: 52px 18px; }
+  .skeleton-brand-logo { width: 72px; height: 72px; }
+  .skeleton-deal-title { height: 58px; }
+  .skeleton-deal-headline { height: 72px; }
+  .skeleton-fact-grid { grid-template-columns: 1fr 1fr; }
+  .skeleton-fact-grid > span { min-height: 110px; border-bottom: 2px solid var(--ink); }
+  .skeleton-fact-grid > span:nth-child(2) { border-right: 0; }
+  .skeleton-deal-side { display: grid; grid-template-columns: 1fr; }
+  .skeleton-operator-title { width: 100%; height: 90px; }
+  .skeleton-operator-grid article { min-height: 320px; padding: 20px; }
   .ticker { justify-content: flex-start; padding-left: 16px; }
   .ticker span:nth-of-type(n+3), .ticker i:nth-of-type(n+3) { display: none; }
   .hero-grid { min-height: auto; grid-template-columns: minmax(0, 1fr); padding-top: 64px; }

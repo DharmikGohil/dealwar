@@ -1,3 +1,5 @@
+import { PublicBoardSkeleton } from "@/components/ui/loading-skeletons";
+
 export default function Loading() {
-  return <div className="route-loading" role="status"><span /><strong>Loading the board</strong></div>;
+  return <PublicBoardSkeleton />;
 }
